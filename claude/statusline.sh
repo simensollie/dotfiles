@@ -131,7 +131,7 @@ if [[ -n "$COST" && "$COST" != "null" && "$COST" != "0" ]]; then
     if [[ -n "$SEVEN_PCT" && "$SEVEN_PCT" != "null" ]]; then
       (( $(printf '%.0f' "$SEVEN_PCT") >= 90 )) && SHOW_COST=true
     fi
-    $SHOW_COST && COST_SEG="${SEP}${PEACH} ${COST_FMT}${RST}"
+    $SHOW_COST && COST_SEG="${SEP}${PEACH}~${COST_FMT}${RST}"
   else
     # API billing: always show cost
     COST_SEG="${SEP}${OVERLAY}${COST_FMT}${RST}"
