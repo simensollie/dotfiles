@@ -118,11 +118,24 @@ if $IS_SUB && [[ -n "$SEVEN_PCT" && "$SEVEN_PCT" != "null" ]]; then
   RLIM+="${SEP}${SC}7d: ${SI}%${RST}"
 fi
 
-# ─── Cost (API billing only) ─────────────────────────────────────
+# ─── Cost ────────────────────────────────────────────────────────
 COST_SEG=""
-if ! $IS_SUB && [[ -n "$COST" && "$COST" != "null" && "$COST" != "0" ]]; then
+if [[ -n "$COST" && "$COST" != "null" && "$COST" != "0" ]]; then
   COST_FMT=$(printf '$%.2f' "$COST")
-  COST_SEG="${SEP}${OVERLAY}${COST_FMT}${RST}"
+  if $IS_SUB; then
+    # Subscription: show session cost when either rate limit >= 90%
+    SHOW_COST=false
+    if [[ -n "$FIVE_PCT" && "$FIVE_PCT" != "null" ]]; then
+      (( $(printf '%.0f' "$FIVE_PCT") >= 90 )) && SHOW_COST=true
+    fi
+    if [[ -n "$SEVEN_PCT" && "$SEVEN_PCT" != "null" ]]; then
+      (( $(printf '%.0f' "$SEVEN_PCT") >= 90 )) && SHOW_COST=true
+    fi
+    $SHOW_COST && COST_SEG="${SEP}${PEACH} ${COST_FMT}${RST}"
+  else
+    # API billing: always show cost
+    COST_SEG="${SEP}${OVERLAY}${COST_FMT}${RST}"
+  fi
 fi
 
 # ═══ LINE 2: context │ 5h │ 7d │ cost ════════════════════════════
