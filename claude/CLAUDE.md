@@ -11,3 +11,6 @@
 - **Cloud ID:** `2f72797b-c36b-4347-8c49-5fd1b2d28165`
 
 Always create Jira tasks in the NK project unless the user specifies otherwise.
+# graphify
+- **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
+When the user types `/graphify`, invoke the Skill tool with `skill: "graphify"` before doing anything else.
