@@ -25,6 +25,7 @@ git clone git@github.com:simensollie/dotfiles.git ~/dev/dotfiles
 ln -sf ~/dev/dotfiles/claude/settings.json ~/.claude/settings.json
 ln -sf ~/dev/dotfiles/claude/CLAUDE.md ~/.claude/CLAUDE.md
 ln -sf ~/dev/dotfiles/claude/statusline.sh ~/.claude/statusline.sh
+ln -sf ~/dev/dotfiles/claude/skills ~/.claude/skills
 ```
 
 ### AeroSpace
