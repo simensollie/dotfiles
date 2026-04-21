@@ -12,6 +12,7 @@ Personal configuration files for macOS and Linux.
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
 | `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
+| `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
 ## Setup
 
@@ -59,4 +60,18 @@ file under `ghostty/themes/`.
 
 ```bash
 ln -sf ~/dev/dotfiles/starship/starship.toml ~/.config/starship.toml
+```
+
+### Zsh aliases
+
+Requires `eza`, `zoxide`, `fzf`, `bat`:
+
+```bash
+brew install eza zoxide fzf bat
+```
+
+Then source the aliases file from `~/.zshrc` (after `zoxide init`):
+
+```bash
+[ -f "$HOME/dev/dotfiles/zsh/aliases.zsh" ] && source "$HOME/dev/dotfiles/zsh/aliases.zsh"
 ```
