@@ -30,5 +30,17 @@
     "vercel@claude-plugins-official": true
   },
   "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$(tail -c1 ~/.claude/settings.json)\" ] && printf '\\n' >> ~/.claude/settings.json"
+          }
+        ]
+      }
+    ]
+  }
 }
