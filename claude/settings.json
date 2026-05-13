@@ -2,9 +2,22 @@
   "permissions": {
     "allow": [
       "mcp__pencil"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "model": "opus[1m]",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$(tail -c1 ~/.claude/settings.json)\" ] && printf '\\n' >> ~/.claude/settings.json"
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
@@ -27,20 +40,11 @@
     "atlassian@claude-plugins-official": true,
     "explanatory-output-style@claude-plugins-official": true,
     "product-tracking-skills@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true
+    "vercel@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true
   },
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$(tail -c1 ~/.claude/settings.json)\" ] && printf '\\n' >> ~/.claude/settings.json"
-          }
-        ]
-      }
-    ]
-  }
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
