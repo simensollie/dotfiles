@@ -13,7 +13,7 @@ Personal configuration files for macOS and Linux.
 | `herdr/` | [Herdr](https://herdr.dev/) terminal workspace manager for AI coding agents |
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
 | `nvim/` | Neovim plugin additions on top of the `omarchy-nvim` package |
-| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver, Alacritty, bash and XCompose for Linux |
+| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver and wallpaper, Alacritty, bash and XCompose for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
 | `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
@@ -126,6 +126,21 @@ Unlike `shell.json`, these are safe to symlink. `omarchy branding screensaver
 reset` and `... image` both finish with a plain `cp`, which writes *through* a
 symlink, and `... text` opens nvim, which preserves symlinks. Nothing does the
 atomic rename that would replace the link with a regular file.
+
+Wallpaper (a synthwave sunset in the style of the stock `1-quattro.jpg`, with
+the Solfuglen phoenix as the hero) is a **copy**, not a symlink:
+
+```bash
+mkdir -p ~/.config/omarchy/backgrounds/tokyo-night
+cp "$D/omarchy/omarchy/backgrounds/tokyo-night/solfuglen-synthwave.jpg" \
+   ~/.config/omarchy/backgrounds/tokyo-night/
+omarchy theme bg set ~/.config/omarchy/backgrounds/tokyo-night/solfuglen-synthwave.jpg
+```
+
+`omarchy theme bg set` stores the image's `realpath` in
+`~/.local/state/omarchy/current/background`, so symlinking would bake a
+`~/dev/dotfiles` path into Omarchy's state. Regenerate it with
+`omarchy/wallpaper/generate.sh --install`, which does both steps.
 
 `omarchy/bin/ttfx` shadows `/usr/bin/ttfx`, not an `omarchy-*` command. That is
 deliberate: the graphical session PATH (`systemctl --user show-environment`) puts
