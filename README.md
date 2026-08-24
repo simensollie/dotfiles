@@ -13,7 +13,7 @@ Personal configuration files for macOS and Linux.
 | `herdr/` | [Herdr](https://herdr.dev/) terminal workspace manager for AI coding agents |
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
 | `nvim/` | Neovim plugin additions on top of the `omarchy-nvim` package |
-| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), Alacritty, bash and XCompose for Linux |
+| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver, Alacritty, bash and XCompose for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
 | `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
@@ -113,6 +113,25 @@ package (`appimagelauncherd` ships its own in `/usr/lib/systemd/user/`).
 Enablement itself is never committed: `systemctl --user enable` writes absolute
 symlinks into `*.target.wants/` that point at this machine's paths, so they do
 not survive a move to another box. Run the enable commands instead.
+
+Screensaver (the Solfuglen phoenix art, plus the wrapper that keeps the random
+effect fire-themed):
+
+```bash
+ln -sfn "$D/omarchy/omarchy/branding/screensaver.txt" ~/.config/omarchy/branding/screensaver.txt
+ln -sfn "$D/omarchy/bin/ttfx"                         ~/.local/bin/ttfx
+```
+
+Unlike `shell.json`, these are safe to symlink. `omarchy branding screensaver
+reset` and `... image` both finish with a plain `cp`, which writes *through* a
+symlink, and `... text` opens nvim, which preserves symlinks. Nothing does the
+atomic rename that would replace the link with a regular file.
+
+`omarchy/bin/ttfx` shadows `/usr/bin/ttfx`, not an `omarchy-*` command. That is
+deliberate: the graphical session PATH (`systemctl --user show-environment`) puts
+`/usr/share/omarchy/bin` *first*, ahead of `~/.local/bin`, so `omarchy-*` cannot be
+overridden from a user directory -- even though the login-shell PATH is ordered the
+other way round and makes it look like it can. See `omarchy/screensaver/README.md`.
 
 **`shell.json` is the one exception, and must stay a copy:**
 

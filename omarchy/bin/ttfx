@@ -1,0 +1,52 @@
+#!/bin/bash
+# Targeted ttfx override for the Solfuglen screensaver.
+#
+# omarchy-screensaver calls `ttfx --random-effect`, which picks uniformly from all
+# 38 effects -- so a phoenix gets `matrix` or `vhstape` as often as `burn`. This
+# wrapper appends --include-effects to that ONE invocation and passes every other
+# ttfx call through untouched.
+#
+# It deliberately does not copy any packaged omarchy code, so upstream changes to
+# omarchy-screensaver are picked up normally. See the guards below for what happens
+# when the assumptions it does make stop holding.
+
+REAL=/usr/bin/ttfx
+EFFECTS=(burn fireworks smoke beams spray colorshift)
+MARKER=branding/screensaver.txt          # only pin the screensaver's own invocation
+STAMP="${XDG_CACHE_HOME:-$HOME/.cache}/solfuglen-screensaver"
+
+# Guard 1: the real binary is gone (package removed/renamed) -- nothing to wrap.
+[[ -x $REAL ]] || {
+  echo "ttfx: $REAL not found; remove ~/.local/bin/ttfx" >&2
+  exit 127
+}
+
+# Only consider pinning when this looks like the screensaver's random-effect call.
+pin=0 saw_random=0 saw_marker=0
+for arg in "$@"; do
+  case $arg in
+  --random-effect | -R) saw_random=1 ;;
+  *"$MARKER"*) saw_marker=1 ;;
+  esac
+done
+((saw_random && saw_marker)) && pin=1
+
+if ((pin)); then
+  # Guard 2: this wrapper only understands a ttfx that still supports
+  # --include-effects. If upstream renames or drops it, fall through to a plain
+  # pass-through rather than breaking the screensaver, and say so once a day.
+  if "$REAL" --help 2>/dev/null | grep -q -- '--include-effects'; then
+    exec "$REAL" "$@" --include-effects "${EFFECTS[@]}"
+  fi
+
+  mkdir -p "$STAMP"
+  warn="$STAMP/guard-tripped"
+  if [[ ! -f $warn ]] || (($(date +%s) - $(stat -c %Y "$warn" 2>/dev/null || echo 0) > 86400)); then
+    touch "$warn"
+    omarchy-notification-send -g ✋ \
+      "ttfx no longer supports --include-effects; screensaver effect pinning disabled (~/.local/bin/ttfx)" \
+      2>/dev/null || true
+  fi
+fi
+
+exec "$REAL" "$@"
