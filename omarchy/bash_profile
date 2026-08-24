@@ -1,0 +1,20 @@
+#
+# ~/.bash_profile
+#
+
+[[ -f ~/.bashrc ]] && . ~/.bashrc
+
+# Amp CLI
+export PATH="/home/siso/.amp/bin:$PATH"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+. "$HOME/.local/share/../bin/env"
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/siso/.lmstudio/bin"
+# End of LM Studio CLI section
+
+export PATH="$HOME/.cargo/bin:$PATH"

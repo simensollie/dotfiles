@@ -9,9 +9,11 @@ Personal configuration files for macOS and Linux.
 | `aerospace/` | [AeroSpace](https://github.com/nikitabobko/AeroSpace) tiling window manager for macOS |
 | `claude/` | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI settings, instructions, and custom statusline |
 | `ghostty/` | [Ghostty](https://ghostty.org/) terminal config and themes, ported from [Omarchy](https://omarchy.org/) |
+| `git/` | Git config (aliases, rebase-on-pull, histogram diffs, rerere) and global ignore file |
 | `herdr/` | [Herdr](https://herdr.dev/) terminal workspace manager for AI coding agents |
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
-| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers) for Linux |
+| `nvim/` | Neovim plugin additions on top of the `omarchy-nvim` package |
+| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), Alacritty, bash and XCompose for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
 | `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
@@ -73,6 +75,53 @@ not match that remap, so the four modifiers are written out in full.
 
 Run `herdr config check` after editing, and `herdr server reload-config` to
 apply without restarting. `prefix+?` lists the active bindings.
+
+### Omarchy (Linux)
+
+Unlike the sections above, these are copied rather than symlinked, because
+`omarchy refresh` and the `omarchy bar` / `omarchy theme` commands rewrite the
+live files in place. Copy them out after a fresh install, and copy changes back
+before committing:
+
+```bash
+# Hyprland (keybindings, monitors, input, look and feel)
+cp omarchy/hypr/*.lua omarchy/hypr/*.conf ~/.config/hypr/
+
+# Omarchy shell (bar layout, idle timers)
+cp omarchy/omarchy/shell.json ~/.config/omarchy/shell.json
+
+# Alacritty
+cp omarchy/alacritty/alacritty.toml ~/.config/alacritty/
+
+# Bash and XCompose
+cp omarchy/bashrc ~/.bashrc
+cp omarchy/bash_profile ~/.bash_profile
+cp omarchy/xcompose ~/.XCompose
+
+# voxtype user unit (enable it, do not commit the .wants symlinks)
+cp omarchy/systemd/user/voxtype.service ~/.config/systemd/user/
+systemctl --user enable --now voxtype.service
+```
+
+Apply Hyprland changes with `hyprctl reload`, then check `hyprctl configerrors`.
+
+### Git
+
+```bash
+mkdir -p ~/.config/git
+ln -sf ~/dev/dotfiles/git/config ~/.config/git/config
+ln -sf ~/dev/dotfiles/git/ignore ~/.config/git/ignore
+```
+
+### Neovim
+
+The base config comes from the `omarchy-nvim` package. Only local additions are
+tracked here:
+
+```bash
+ln -sf ~/dev/dotfiles/nvim/lua/plugins/aw-watcher.lua \
+  ~/.config/nvim/lua/plugins/aw-watcher.lua
+```
 
 ### Starship
 
