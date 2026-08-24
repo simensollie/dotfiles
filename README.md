@@ -78,25 +78,27 @@ apply without restarting. `prefix+?` lists the active bindings.
 
 ### Omarchy (Linux)
 
-Unlike the sections above, these are copied rather than symlinked, because
-`omarchy refresh` and the `omarchy bar` / `omarchy theme` commands rewrite the
-live files in place. Copy them out after a fresh install, and copy changes back
-before committing:
+Most of these are symlinked, so edits to the live config land straight in the
+repo:
 
 ```bash
-# Hyprland (keybindings, monitors, input, look and feel)
-cp omarchy/hypr/*.lua omarchy/hypr/*.conf ~/.config/hypr/
+D=~/dev/dotfiles
 
-# Omarchy shell (bar layout, idle timers)
-cp omarchy/omarchy/shell.json ~/.config/omarchy/shell.json
+# Hyprland (keybindings, monitors, input, look and feel)
+for f in autostart bindings hyprland input looknfeel monitors; do
+  ln -sfn "$D/omarchy/hypr/$f.lua" ~/.config/hypr/$f.lua
+done
+for f in hyprsunset xdph; do
+  ln -sfn "$D/omarchy/hypr/$f.conf" ~/.config/hypr/$f.conf
+done
 
 # Alacritty
-cp omarchy/alacritty/alacritty.toml ~/.config/alacritty/
+ln -sfn "$D/omarchy/alacritty/alacritty.toml" ~/.config/alacritty/alacritty.toml
 
 # Bash and XCompose
-cp omarchy/bashrc ~/.bashrc
-cp omarchy/bash_profile ~/.bash_profile
-cp omarchy/xcompose ~/.XCompose
+ln -sfn "$D/omarchy/bashrc"       ~/.bashrc
+ln -sfn "$D/omarchy/bash_profile" ~/.bash_profile
+ln -sfn "$D/omarchy/xcompose"     ~/.XCompose
 
 # voxtype user unit (enable it, do not commit the .wants symlinks)
 cp omarchy/systemd/user/voxtype.service ~/.config/systemd/user/
@@ -104,6 +106,23 @@ systemctl --user enable --now voxtype.service
 ```
 
 Apply Hyprland changes with `hyprctl reload`, then check `hyprctl configerrors`.
+
+**`shell.json` is the one exception, and must stay a copy:**
+
+```bash
+cp omarchy/omarchy/shell.json ~/.config/omarchy/shell.json   # deploy
+cp ~/.config/omarchy/shell.json omarchy/omarchy/shell.json   # capture changes
+```
+
+`omarchy-shell-config` (behind every `omarchy bar ...` command) writes with
+`jq > tmp; mv tmp shell.json`. That atomic rename replaces a symlink with a
+regular file, so linking it would silently break on the first bar tweak and
+leave the repo stale again. Copy it back by hand after changing the bar.
+
+One caveat on the symlinked files: `omarchy refresh` uses `cp -f`, which writes
+*through* a symlink. Running `omarchy refresh hyprland` therefore overwrites the
+repo files with Omarchy's defaults rather than detaching the links. That shows
+up in `git status`, and `git checkout -- omarchy/hypr` undoes it.
 
 ### Git
 
