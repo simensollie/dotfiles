@@ -1,0 +1,53 @@
+# ~/.config/herdr/config.toml
+# Hyper = caps_lock via Karabiner -> cmd+ctrl+alt+shift (left_command+left_control+left_option+left_shift).
+# NOTE: write the four modifiers out in full. herdr's "hyper+" is a SEPARATE
+# modifier bit and does NOT match what Karabiner sends.
+onboarding = false
+
+[keys]
+prefix = "ctrl+b"
+
+# --- panes ---
+focus_pane_left  = ["prefix+h", "cmd+ctrl+alt+shift+h"]
+focus_pane_down  = ["prefix+j", "cmd+ctrl+alt+shift+j"]
+focus_pane_up    = ["prefix+k", "cmd+ctrl+alt+shift+k"]
+focus_pane_right = ["prefix+l", "cmd+ctrl+alt+shift+l"]
+split_vertical   = ["prefix+v", "cmd+ctrl+alt+shift+d"]      # side by side (right)
+split_horizontal = ["prefix+minus", "cmd+ctrl+alt+shift+s"]  # stacked (down)
+zoom             = ["prefix+z", "cmd+ctrl+alt+shift+z"]
+close_pane       = ["prefix+x", "cmd+ctrl+alt+shift+x"]
+resize_mode      = ["prefix+r", "cmd+ctrl+alt+shift+r"]
+copy_mode        = ["prefix+[", "cmd+ctrl+alt+shift+c"]
+
+# --- tabs ---
+new_tab      = ["prefix+c", "cmd+ctrl+alt+shift+t"]
+next_tab     = ["prefix+n", "cmd+ctrl+alt+shift+n"]
+previous_tab = ["prefix+p", "cmd+ctrl+alt+shift+p"]
+switch_tab   = ["prefix+1..9", "cmd+ctrl+alt+shift+1..9"]
+
+# --- workspaces and session ---
+workspace_picker = ["prefix+w", "cmd+ctrl+alt+shift+w"]
+goto             = ["prefix+g", "cmd+ctrl+alt+shift+g"]
+toggle_sidebar   = ["prefix+b", "cmd+ctrl+alt+shift+b"]
+detach           = ["prefix+q", "cmd+ctrl+alt+shift+q"]
+
+# --- agents (all unbound by default) ---
+next_agent     = ["prefix+a", "cmd+ctrl+alt+shift+a"]
+previous_agent = "prefix+shift+a"
+focus_agent    = "prefix+alt+1..9"
+
+# --- workspace stepping (unbound by default) ---
+next_workspace     = ["prefix+period", "cmd+ctrl+alt+shift+period"]
+previous_workspace = ["prefix+comma", "cmd+ctrl+alt+shift+comma"]
+switch_workspace   = "prefix+shift+1..9"
+
+[ui]
+agent_panel_sort = "priority"
+show_agent_labels_on_pane_borders = true
+
+[ui.toast]
+delivery = "terminal"
+
+[theme]
+name = "catppuccin"
+auto_switch = false
