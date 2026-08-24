@@ -11,7 +11,7 @@ Personal configuration files for macOS and Linux.
 | `ghostty/` | [Ghostty](https://ghostty.org/) terminal config and themes, ported from [Omarchy](https://omarchy.org/) |
 | `herdr/` | [Herdr](https://herdr.dev/) terminal workspace manager for AI coding agents |
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
-| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config for Linux |
+| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers) for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
 | `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
