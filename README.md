@@ -100,12 +100,19 @@ ln -sfn "$D/omarchy/bashrc"       ~/.bashrc
 ln -sfn "$D/omarchy/bash_profile" ~/.bash_profile
 ln -sfn "$D/omarchy/xcompose"     ~/.XCompose
 
-# voxtype user unit (enable it, do not commit the .wants symlinks)
+# systemd user units
 cp omarchy/systemd/user/voxtype.service ~/.config/systemd/user/
 systemctl --user enable --now voxtype.service
+systemctl --user enable --now appimagelauncherd.service
 ```
 
 Apply Hyprland changes with `hyprctl reload`, then check `hyprctl configerrors`.
+
+Only `voxtype.service` is tracked, because it is the one unit not provided by a
+package (`appimagelauncherd` ships its own in `/usr/lib/systemd/user/`).
+Enablement itself is never committed: `systemctl --user enable` writes absolute
+symlinks into `*.target.wants/` that point at this machine's paths, so they do
+not survive a move to another box. Run the enable commands instead.
 
 **`shell.json` is the one exception, and must stay a copy:**
 
