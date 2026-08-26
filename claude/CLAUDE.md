@@ -3,6 +3,7 @@
 ## Writing Style
 
 - Do not use em dashes (—). Use parentheses for asides, or commas for natural pauses.
+- When reporting information to me, be extremely concise and sacrifice grammar for the sake of concision.
 
 ## How I work
 
