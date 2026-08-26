@@ -1,0 +1,46 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "**Stack**: Next.js (App Router) + TypeScript, deployed on Vercel.",
+      "**Data**: Supabase (Postgres + Auth + Storage). Local stack via `supabase start`; the linked hosted project is production data.",
+      "**Secrets**: `.env*` are gitignored; production values live in Vercel env vars, scoped Production/Preview.",
+      "**Protected**: `main`; the Vercel Production environment scope; the linked hosted Supabase project."
+    ],
+    "allow": [
+      "$defaults",
+      "Bash(pnpm:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(supabase start)",
+      "Bash(supabase stop)",
+      "Bash(supabase status)",
+      "Bash(supabase migration new:*)",
+      "Bash(supabase migration list)",
+      "Bash(supabase db reset)",
+      "Bash(vercel env pull:*)"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(supabase db push)",
+      "Bash(supabase config push:*)",
+      "Bash(vercel deploy --prod)",
+      "Bash(vercel --prod)",
+      "Bash(vercel env add:*)",
+      "Bash(vercel env rm:*)"
+    ]
+  }
+}

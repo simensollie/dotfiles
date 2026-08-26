@@ -1,0 +1,39 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "expo@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "**Stack**: Expo (React Native) + TypeScript; EAS Build / Submit / Update for releases.",
+      "**Reaches real devices**: EAS production builds, store submissions, and OTA updates on the production channel ship to installed apps and cannot be recalled.",
+      "**Protected**: `main`; the EAS production build profile, the production update channel, and App Store / Play Console submissions."
+    ],
+    "allow": [
+      "$defaults",
+      "Bash(npx expo start:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npx expo prebuild:*)",
+      "Bash(npx expo-doctor:*)",
+      "Bash(eas whoami)",
+      "Bash(eas build:list:*)",
+      "Bash(eas update:list:*)"
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Bash(eas submit:*)",
+      "Bash(eas build --profile production:*)",
+      "Bash(eas update --channel production:*)",
+      "Bash(eas credentials:*)"
+    ]
+  }
+}

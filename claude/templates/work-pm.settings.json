@@ -1,0 +1,24 @@
+{
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "atlassian@claude-plugins-official": true
+  },
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "**Context**: Certain QMS / NP365 product management, PRDs, specs, Linear issues, release notes. Little or no coding.",
+      "**Issue tracking**: Linear is canonical (default team CER). Legacy Jira NK (`netpower.atlassian.net`) is read-only, retained for ISO 27001 audit history.",
+      "**Regulated**: ISO 9001, 27001, 31000, 42001 and GDPR apply. Flag anything touching audit trails, approval workflows, or document control.",
+      "**Data**: never use real customer data in examples or drafts, synthetic only.",
+      "**Outward-facing**: customer-facing drafts, release notes, and anything published to Confluence or sent to a customer are external communication."
+    ],
+    "soft_deny": [
+      "$defaults",
+      "Creating or editing issues in the legacy Jira NK project (netpower.atlassian.net), it is read-only audit history; new issues belong in Linear.",
+      "Publishing or updating Confluence pages that customers or auditors read.",
+      "Transitioning or closing Linear issues that the user did not explicitly ask to move."
+    ]
+  }
+}

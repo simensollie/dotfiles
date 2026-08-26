@@ -1,11 +1,7 @@
 {
   "permissions": {
-    "allow": [
-      "mcp__pencil"
-    ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
   "hooks": {
     "Stop": [
       {
@@ -16,6 +12,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x ~/.claude/hooks/herdr-agent-state.sh ] && bash ~/.claude/hooks/herdr-agent-state.sh session || true",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -23,28 +31,23 @@
     "command": "~/.claude/statusline.sh",
     "padding": 0
   },
-  "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true,
-    "code-review@claude-plugins-official": true,
-    "github@claude-plugins-official": false,
-    "code-simplifier@claude-plugins-official": true,
-    "feature-dev@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "claude-code-setup@claude-plugins-official": true,
-    "atlassian@claude-plugins-official": true,
-    "explanatory-output-style@claude-plugins-official": true,
-    "product-tracking-skills@claude-plugins-official": true,
-    "vercel@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true
-  },
+  "enabledPlugins": {},
   "effortLevel": "high",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "environment": [
+      "$defaults",
+      "### User-specific",
+      "**Two contexts**: (1) personal side projects under `~/dev/` (Next.js web apps, Expo mobile apps; remotes `github.com:simensollie/*`), (2) work product management for Certain QMS / NP365 (docs, PRDs, Linear issues; little or no coding).",
+      "**Dotfiles**: `~/dev/dotfiles` is deployed to `~/.config` and `~/.claude` by symlink, so edits there change live system and Claude Code configuration immediately.",
+      "**Sensitive data**: never use real customer, member, or employee data in examples, fixtures, or tests (GDPR), synthetic only. `.env*` files hold secrets and are gitignored.",
+      "**Protected everywhere**: `main` is the default branch in every repo; production deploys, live payment keys, and writes to hosted (non-local) databases are sensitive regardless of project.",
+      "**Per-project infrastructure** (cloud providers, services, protected environments) is declared in each repo's own `.claude/settings.json`, not here."
+    ]
+  }
 }
