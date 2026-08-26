@@ -56,3 +56,18 @@ The raw token count matters less than crowding: `skillListingBudgetFraction` (de
 1% of the context window, in chars) and `skillListingMaxDescChars` (default 1536) cap
 the whole listing, and descriptions get truncated across the board once it overflows -
 which degrades trigger accuracy for the skills that actually matter in that repo.
+
+## Why the allow rules are narrow
+
+A prefix rule pre-approves everything after the prefix, so a broad one hands over
+arbitrary code execution:
+
+- `Bash(pnpm:*)` also matches `pnpm exec <anything>` and `pnpm dlx <anything>`.
+- `Bash(npm run:*)` runs whatever the repo's package.json defines, which can be any
+  shell command.
+- `Bash(npx <pkg>:*)` with a wildcard on the arguments can install and execute other
+  packages, and npm postinstall scripts run arbitrary code.
+
+The templates therefore list explicit subcommands (`pnpm build`, `pnpm test:*`) rather
+than a bare tool prefix, and push the open-ended forms into `soft_deny`. Widen a rule
+in the repo that needs it, not in the template.

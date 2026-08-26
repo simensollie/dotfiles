@@ -20,8 +20,8 @@
     ],
     "allow": [
       "$defaults",
+      "Bash(npx expo install)",
       "Bash(npx expo start:*)",
-      "Bash(npx expo install:*)",
       "Bash(npx expo prebuild:*)",
       "Bash(npx expo-doctor:*)",
       "Bash(eas whoami)",
@@ -33,7 +33,9 @@
       "Bash(eas submit:*)",
       "Bash(eas build --profile production:*)",
       "Bash(eas update --channel production:*)",
-      "Bash(eas credentials:*)"
+      "Bash(eas credentials:*)",
+      "Bash(npx:*) for any package other than expo, expo-doctor or eas-cli.",
+      "Installing a new dependency, since npm postinstall scripts execute arbitrary code."
     ]
   }
 }
