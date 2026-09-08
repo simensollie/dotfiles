@@ -1,0 +1,93 @@
+{
+  "_readme": "Register of customer feedback boards. A HINT, never an authority: it saves board/list discovery calls, but live card data settles every question. Verify listIds against live data before any write; on drift, update the entry, bump listsVerifiedAt, and report the delta. Fields: connector = which MCP server can read this board (claude-ai | local). commentLanguage = language for customer-facing card comments. backlinkStyle = comment (notifies the customer) | silent-attachment (does not). resolutionMechanism = how finished work leaves the board (column | archival) — note neither is terminal, customers un-archive and pull cards back. packageVersion = the customer's qms-package slot, which sets their deploy cut-off. joinKey is PER BOARD, not global. roles vocabulary: intake, blocking, backlog, bugs, phase2, in-progress, waiting, awaiting-deploy, resolved, improvement, wont-do.",
+
+  "apotek1": {
+    "displayName": "Apotek 1",
+    "aliases": ["apotek 1", "apotek1", "Apotek 1 Feedback"],
+    "workspaceId": "698ae5eeeb98fd44ee9b183b",
+    "boardId": "6a2c09e6c124609d276726f6",
+    "boardName": "Apotek 1 Feedback",
+    "connector": "claude-ai",
+    "commentLanguage": "en",
+    "backlinkStyle": "comment",
+    "resolutionMechanism": "column",
+    "deployTarget": "Apotek1Test",
+    "packageVersion": "1.40.0.0",
+    "linearProjects": [
+      "Apotek1 Feedback",
+      "Minor improvements and bug",
+      "Checklist V3 rebuild",
+      "Certain Control: Inspections",
+      "Frontend improvements",
+      "Project Improvements",
+      "Certain QMS - Small tasks and bugs."
+    ],
+    "linearTeams": ["CER"],
+    "joinKey": "card title number (this board numbers every card); shortLink as tiebreak",
+    "lists": [
+      { "id": "6a2c0c3ed79c872bcb4d4951", "name": "📥 New Feedback", "role": "intake" },
+      { "id": "6a2c0c39e2d62bec78a60c7f", "name": "❓ Needs Clarification", "role": "waiting" },
+      { "id": "6a2c0bfc755099a8aee6463e", "name": "✅ Accepted / Backlog", "role": "backlog" },
+      { "id": "6a2c0bf83fa46f08e1f4e1d9", "name": "🔨 In Progress", "role": "in-progress" },
+      { "id": "6a9a7305ba654a33d3ae5f95", "name": "🚀 Fixed – Awaiting Deployment", "role": "awaiting-deploy" },
+      { "id": "6a2c0bbc38a0731af3c3de3a", "name": "✔️ Done", "role": "resolved" },
+      { "id": "6a2c0bb9e81fd817f5a5a962", "name": "🚫 Won't Do / Out of Scope", "role": "wont-do" }
+    ],
+    "listsVerifiedAt": "2026-09-08",
+    "listsStale": false,
+    "notes": [
+      "Card title number diverges from Trello idShort from title 60 upward (title 60 = idShort 61), because idShort 60's card was deleted. Linear's existing 'Trello card #NN' rows use title numbers.",
+      "The awaiting-deploy column was added 2026-09-04 and holds both genuinely queued work and work blocked behind a FAILED deploy. Distinguish the two in comments.",
+      "Column order puts awaiting-deploy BEFORE resolved, so moving a card there from Done is backward in list order. See SKILL.md on when that is legitimate."
+    ]
+  },
+
+  "risa": {
+    "displayName": "Risa",
+    "aliases": ["risa", "Risa: Tilbakemeldinger"],
+    "workspaceId": "69f3150edaef3546b7a1076c",
+    "boardId": "69f344a8be89021effc26e35",
+    "boardName": "Risa: Tilbakemeldinger",
+    "connector": "local",
+    "commentLanguage": "no",
+    "backlinkStyle": "silent-attachment",
+    "resolutionMechanism": "archival",
+    "deployTarget": "Risa",
+    "packageVersion": "1.40.0.0",
+    "linearProjects": [
+      "Risa feedback",
+      "Risa Phase 2",
+      "Certain API: write support (Risa)",
+      "Certain Pulse: HMSREG transfer",
+      "Certain Pulse: Cause chains",
+      "Certain Control: Inspections",
+      "Minor improvements and bug",
+      "Apotek1 Feedback"
+    ],
+    "linearTeams": ["CER", "P365"],
+    "joinKey": "shortLink / url attachment ONLY. Most card titles carry no number, and idShort is NOT unique on this board (duplicate #1/#2 from board templates and imports from the closed test-phase board). Semantic NO-to-EN title matching is the last resort.",
+    "lists": [
+      { "id": "69f344a8be89021effc26e2f", "name": "📥 Innboks", "role": "intake" },
+      { "id": "69f344a8be89021effc26e30", "name": "🔴 Kritisk – Blokkerende", "role": "blocking", "empty": true },
+      { "id": "6a3d2912b0d4e13a4158aa52", "name": "🗂️ Backlog", "role": "backlog", "empty": true },
+      { "id": "6a968b32b9a237d1709003da", "name": "Bugs / feilretting", "role": "bugs" },
+      { "id": "6a968b24ce39a23404de849e", "name": "Prioritering Fase 2", "role": "phase2" },
+      { "id": "69f344a8be89021effc26e31", "name": "🔄 Under behandling (Netpower)", "role": "in-progress" },
+      { "id": "69f344a8be89021effc26e32", "name": "⏳ Venter på avklaring", "role": "waiting" },
+      { "id": "69f344a8be89021effc26e33", "name": "✅ Løst", "role": "resolved" },
+      { "id": "69f344a8be89021effc26e34", "name": "💡 Forbedringsforslag (etter lansering)", "role": "improvement" }
+    ],
+    "listsVerifiedAt": "2026-09-08",
+    "listsStale": false,
+    "notes": [
+      "NO awaiting-deploy column exists. Do not create one. Output is a comment plus the report.",
+      "Bugs / feilretting and Prioritering Fase 2 were created 2026-09-01 and Kritisk + Backlog were fully drained into them, so both older lists are now empty but still live roles.",
+      "Roughly 40 percent of the board is NP365 work owned by the P365 Linear team. P365 issues link AZURE DEVOPS, not GitLab, so the GitLab merge-state recipe cannot reach them.",
+      "Cards #158 / #61 are SPFx webpart work that ships via the SharePoint app catalog, not the qms package. No cut-off recipe covers it; classify as Unverifiable.",
+      "Attachments do not notify the customer; comments do. Hence backlinkStyle silent-attachment.",
+      "Archival is not terminal: the customer un-archived #142 on 2026-09-07 to reopen it. Customers also pull cards back out of ✅ Løst when they disagree.",
+      "✅ Løst is not a delivery count. It contains won't-fix closures (#4) and work the customer built himself (#79).",
+      "Older board 'Risa Test Phase' 69f8e21ae1697fedb164c10b is closed/archived. Ignore it, but some Linear descriptions still link to its cards."
+    ]
+  }
+}
