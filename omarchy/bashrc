@@ -21,6 +21,12 @@ export PATH="$HOME/.local/bin:$PATH"
 # alias p='python'
 alias claude-yolo='claude --dangerously-skip-permissions'
 
+# Open markdown in Typora, detached from the shell.
+# Calls typora directly rather than going through `open`/xdg-open, because
+# `file --mime-type` sniffs .md as text/plain, which xdg-open routes to nvim.
+# Handles every extension Typora accepts: .md .mmd .markdown .mdwn .txt .text
+md() ( typora "$@" > /dev/null 2>&1 & )
+
 # Amp CLI
 export PATH="/home/siso/.amp/bin:$PATH"
 
