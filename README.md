@@ -76,6 +76,18 @@ not match that remap, so the four modifiers are written out in full.
 Run `herdr config check` after editing, and `herdr server reload-config` to
 apply without restarting. `prefix+?` lists the active bindings.
 
+`omarchy/bin/aw-watcher-herdr` is an ActivityWatch watcher for herdr. It polls
+`session.snapshot` over the herdr socket every 5 s and heartbeats the focused
+pane (workspace, tab, pane, agent, agent status, project) into the
+`aw-watcher-herdr_<hostname>` bucket. Symlink it and let Hyprland autostart it:
+
+```bash
+ln -sf ~/dev/dotfiles/omarchy/bin/aw-watcher-herdr ~/.local/bin/aw-watcher-herdr
+```
+
+It stays quiet while no herdr server is running, so leaving it running costs
+nothing. `aw-watcher-herdr --once --dry-run` prints what it would send.
+
 ### Omarchy (Linux)
 
 Most of these are symlinked, so edits to the live config land straight in the

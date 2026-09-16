@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""ActivityWatch watcher for herdr (terminal workspace manager for AI coding agents).
+
+Polls the herdr server over its unix socket API (session.snapshot) and sends a
+heartbeat per focused pane to an ActivityWatch bucket.
+
+Heartbeats are sent whenever a herdr server is running, regardless of whether
+herdr has window focus. Intersect with the window bucket in a query if you want
+"time spent looking at herdr" rather than "time herdr held this state".
+"""
+
+import argparse
+import json
+import os
+import socket
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
+
+CLIENT = "aw-watcher-herdr"
+BUCKET_TYPE = "app.agent.activity"
+DEFAULT_SERVER = "http://localhost:5600"
+DEFAULT_SOCKET = os.path.expanduser("~/.config/herdr/herdr.sock")
+POLL_INTERVAL = 5.0
+PULSETIME_FACTOR = 2.5
+
+
+def log(msg):
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def herdr_call(socket_path, method, params=None, timeout=2.0):
+    """Send one JSON-RPC request over the herdr unix socket. Returns result or None."""
+    if not os.path.exists(socket_path):
+        return None
+    request = {"id": f"{CLIENT}:{int(time.time() * 1000)}", "method": method, "params": params or {}}
+    try:
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.settimeout(timeout)
+        client.connect(socket_path)
+        client.sendall((json.dumps(request) + "\n").encode())
+        chunks = []
+        while b"\n" not in b"".join(chunks):
+            chunk = client.recv(65536)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        client.close()
+    except (OSError, socket.timeout):
+        return None
+    raw = b"".join(chunks).split(b"\n", 1)[0]
+    if not raw:
+        return None
+    try:
+        response = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    if "error" in response:
+        return None
+    result = response.get("result")
+    # Results are a tagged union: session.snapshot answers {"type": "session_snapshot", "snapshot": {...}}
+    if isinstance(result, dict) and "snapshot" in result:
+        return result["snapshot"]
+    return result
+
+
+def payload_from_snapshot(snapshot):
+    """Reduce a herdr session snapshot to the focused pane's activity data."""
+    pane_id = snapshot.get("focused_pane_id")
+    panes = {p["pane_id"]: p for p in snapshot.get("panes", [])}
+    pane = panes.get(pane_id) or next((p for p in snapshot.get("panes", []) if p.get("focused")), None)
+    if not pane:
+        return None
+
+    agents = {a["pane_id"]: a for a in snapshot.get("agents", [])}
+    agent = agents.get(pane["pane_id"], {})
+
+    workspaces = {w["workspace_id"]: w for w in snapshot.get("workspaces", [])}
+    tabs = {t["tab_id"]: t for t in snapshot.get("tabs", [])}
+    workspace = workspaces.get(pane.get("workspace_id"), {})
+    tab = tabs.get(pane.get("tab_id"), {})
+
+    cwd = agent.get("cwd") or pane.get("cwd") or ""
+    agent_name = agent.get("display_agent") or agent.get("agent") or pane.get("display_agent") or pane.get("agent")
+
+    return {
+        "workspace": workspace.get("label") or pane.get("workspace_id", ""),
+        "tab": tab.get("label") or pane.get("tab_id", ""),
+        "pane": pane.get("label") or pane.get("title") or pane.get("terminal_title_stripped") or "",
+        "agent": agent_name or "none",
+        "status": (agent.get("agent_status") or pane.get("agent_status") or "unknown"),
+        "project": os.path.basename(cwd.rstrip("/")) if cwd else "",
+        "cwd": cwd,
+    }
+
+
+def create_bucket(server, bucket_id, hostname):
+    body = json.dumps({"client": CLIENT, "type": BUCKET_TYPE, "hostname": hostname}).encode()
+    req = urllib.request.Request(
+        f"{server}/api/0/buckets/{bucket_id}", data=body, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        urllib.request.urlopen(req, timeout=5).read()
+    except urllib.error.HTTPError as exc:
+        if exc.code not in (304, 409):
+            raise
+
+
+def heartbeat(server, bucket_id, data, pulsetime):
+    event = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "duration": 0,
+        "data": data,
+    }
+    req = urllib.request.Request(
+        f"{server}/api/0/buckets/{bucket_id}/heartbeat?pulsetime={pulsetime}",
+        data=json.dumps(event).encode(), method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    urllib.request.urlopen(req, timeout=5).read()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="ActivityWatch watcher for herdr")
+    parser.add_argument("--server", default=os.environ.get("AW_SERVER", DEFAULT_SERVER))
+    parser.add_argument("--socket", default=os.environ.get("HERDR_SOCKET_PATH", DEFAULT_SOCKET))
+    parser.add_argument("--bucket", default=None, help="override bucket id (default aw-watcher-herdr_<hostname>)")
+    parser.add_argument("--interval", type=float, default=POLL_INTERVAL)
+    parser.add_argument("--once", action="store_true", help="poll once and exit")
+    parser.add_argument("--dry-run", action="store_true", help="print the payload instead of sending it")
+    parser.add_argument("--snapshot-file", help="read a snapshot from this file instead of the socket (testing)")
+    args = parser.parse_args()
+
+    hostname = socket.gethostname()
+    bucket_id = args.bucket or f"{CLIENT}_{hostname}"
+    pulsetime = args.interval * PULSETIME_FACTOR
+
+    if not args.dry_run:
+        create_bucket(args.server, bucket_id, hostname)
+        log(f"bucket {bucket_id} ready, polling {args.socket} every {args.interval}s")
+
+    last_seen = None
+    while True:
+        if args.snapshot_file:
+            with open(args.snapshot_file, encoding="utf-8") as handle:
+                snapshot = json.load(handle)
+            if isinstance(snapshot, dict) and "snapshot" in snapshot:
+                snapshot = snapshot["snapshot"]
+        else:
+            snapshot = herdr_call(args.socket, "session.snapshot")
+
+        data = payload_from_snapshot(snapshot) if snapshot else None
+        if data:
+            if args.dry_run:
+                print(json.dumps(data, ensure_ascii=False))
+            else:
+                try:
+                    heartbeat(args.server, bucket_id, data, pulsetime)
+                except (urllib.error.URLError, OSError) as exc:
+                    log(f"heartbeat failed: {exc}")
+            key = (data["workspace"], data["pane"], data["agent"], data["status"])
+            if key != last_seen:
+                log(f"{data['workspace']} / {data['pane']} / {data['agent']} [{data['status']}] {data['project']}")
+                last_seen = key
+        elif last_seen is not None:
+            log("herdr server not running (or no focused pane), pausing heartbeats")
+            last_seen = None
+
+        if args.once:
+            return 0 if data else 1
+        time.sleep(args.interval)
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(0)
