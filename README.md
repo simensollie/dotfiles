@@ -160,6 +160,29 @@ deliberate: the graphical session PATH (`systemctl --user show-environment`) put
 overridden from a user directory -- even though the login-shell PATH is ordered the
 other way round and makes it look like it can. See `omarchy/screensaver/README.md`.
 
+`omarchy/bin/checkupdates` shadows `/usr/bin/checkupdates` for the same reason, and
+fixes the update icon showing up on only one screen:
+
+```bash
+ln -sfn "$D/omarchy/bin/checkupdates" ~/.local/bin/checkupdates
+```
+
+The bar is instantiated once per monitor, and each copy polls
+`omarchy-update-available` on its own timer (`triggeredOnStart`, then every 6 h).
+Both fire at the same instant and collide on the lock `checkupdates` holds over its
+shared temp db, so the loser dies with `Cannot fetch updates`,
+`omarchy-update-available` swallows that as "up to date", and that screen hides the
+icon. Monitor 0 is created first and wins every time, which is why it was always the
+same screen. The wrapper just puts a `flock` around the real binary; it falls through
+to an unserialized run on timeout, so it is never worse than not having it.
+
+Verify a shadow actually takes effect in the session Hyprland spawns things from:
+
+```bash
+env -i PATH="$(systemctl --user show-environment | sed -n 's/^PATH=//p')" \
+  bash -c 'command -v checkupdates'
+```
+
 **`shell.json` is the one exception, and must stay a copy:**
 
 ```bash
