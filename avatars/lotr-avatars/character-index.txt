@@ -1,0 +1,40 @@
+Tolkien character avatars
+
+Original generated PNGs, copied with character-name filenames.
+Artwork is unchanged. Accents are omitted only from filenames.
+
+gandalf-the-grey.png - Gandalf the Grey
+frodo-baggins.png - Frodo Baggins
+samwise-gamgee.png - Samwise Gamgee
+aragorn.png - Aragorn
+legolas.png - Legolas
+gimli.png - Gimli
+arwen.png - Arwen
+gollum.png - Gollum
+sauron.png - Sauron
+isildur.png - Isildur
+bilbo-baggins.png - Bilbo Baggins
+thorin-oakenshield.png - Thorin Oakenshield
+bard-the-bowman.png - Bard the Bowman
+galadriel.png - Galadriel
+elrond.png - Elrond
+treebeard.png - Treebeard
+feanor.png - Fëanor
+turin-turambar.png - Túrin Turambar
+
+Added from Codex sheets (2026-09-16) — square white-bg singles for Grok Bot:
+saruman.png - Saruman
+smaug.png - Smaug
+morgoth.png - Morgoth (Melkor)
+luthien.png - Lúthien
+beren.png - Beren
+nazgul.png - Nazgûl
+tom-bombadil.png - Tom Bombadil
+fingolfin.png - Fingolfin
+goldberry.png - Goldberry
+nienor.png - Nienor
+finrod.png - Finrod
+
+2026-09-16: All named character PNGs converted to transparent backgrounds (RGBA) for Grok Bot sidebar — avoids white-disk cutoff under circular avatars.
+
+2026-09-16: Face-centered compose A — more top margin so faces sit mid-circle in Grok Bot; transparent RGBA kept.
