@@ -41,3 +41,24 @@ hl.unbind("SUPER + SHIFT + CTRL + G") -- Google Messages
 hl.unbind("SUPER + SHIFT + P")        -- Google Photos
 hl.unbind("SUPER + SHIFT + S")        -- Google Maps (new in 4.x)
 hl.unbind("SUPER + SHIFT + ALT + E")  -- Hey "new email" (new in 4.x)
+
+-- === Omasnap screenshots =================================================
+-- https://github.com/omacom/omasnap - native Wayland capture + annotation.
+-- Was: omarchy-capture-screenshot on PRINT. F12 and ALT+SHIFT+4 carry no
+-- Omarchy 4 default; unbound defensively in case a later release adds one.
+-- Each key toggles: first press opens the overlay, next press dismisses it.
+
+hl.unbind("PRINT")
+hl.unbind("F12")
+hl.unbind("ALT + SHIFT + 4")
+
+o.bind("PRINT", "Screenshot", "omasnap")
+o.bind("F12", "Screenshot", "omasnap")
+o.bind("ALT + SHIFT + 4", "Screenshot", "omasnap")
+
+hl.layer_rule({
+  match = { namespace = "^omasnap$" },
+  no_anim = true,
+  animation = "none",
+  no_screen_share = true,
+})
