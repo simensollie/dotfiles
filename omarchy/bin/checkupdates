@@ -1,0 +1,52 @@
+#!/bin/bash
+# Serialize checkupdates so the Omarchy bar's per-screen update widgets stop racing.
+#
+# The bar is instantiated once per monitor, and each copy runs its own
+# `omarchy-update-available` (Timer, triggeredOnStart + every 6h). Both copies fire
+# at the same instant, both end up in `checkupdates`, and `checkupdates` syncs a
+# shared temp db guarded by a lock:
+#
+#   fakeroot pacman -Sy --dbpath ${TMPDIR:-/tmp}/checkup-db-${UID}
+#     -> second caller: "unable to lock database" -> die 'Cannot fetch updates' -> exit 1
+#
+# omarchy-update-available swallows that failure and reports "up to date", so the
+# losing screen hides the update icon. Monitor 0 is created first and wins every
+# time, which is why the icon always lands on the same (wrong) screen.
+# Worse, the loser's EXIT trap deletes db.lck out from under the winner.
+#
+# Serializing here fixes it for every caller without touching /usr/share/omarchy,
+# which `omarchy update` overwrites. ~/.local/bin beats /usr/bin in both the login
+# and the graphical-session PATH, so this shadow actually takes effect (an
+# `omarchy-*` shadow would not -- see README.md).
+
+REAL=/usr/bin/checkupdates
+LOCK="${XDG_RUNTIME_DIR:-/tmp}/checkupdates.lock"
+TIMEOUT=60
+CONFLICT_RC=75 # not used by checkupdates (0 = updates, 1 = error, 2 = none)
+
+# Guard 1: the real binary is gone (package removed/renamed) -- nothing to wrap.
+[[ -x $REAL ]] || {
+  echo "checkupdates: $REAL not found; remove ~/.local/bin/checkupdates" >&2
+  exit 127
+}
+
+# Guard 2: no flock (util-linux missing/broken) -- pass through rather than fail.
+command -v flock >/dev/null || exec "$REAL" "$@"
+
+# --nosync never touches the shared db, so it cannot race. Do not make it wait.
+for arg in "$@"; do
+  case $arg in
+  -n | --nosync) exec "$REAL" "$@" ;;
+  esac
+done
+
+flock -w "$TIMEOUT" -E "$CONFLICT_RC" "$LOCK" "$REAL" "$@"
+rc=$?
+
+# Timed out waiting (a long `checkupdates -d` elsewhere, say). Run unserialized:
+# that is exactly today's behaviour, so the fallback is never worse than no wrapper.
+if ((rc == CONFLICT_RC)); then
+  exec "$REAL" "$@"
+fi
+
+exit $rc
