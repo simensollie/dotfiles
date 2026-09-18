@@ -20,6 +20,9 @@
         },
         {
           "id": "omarchy.system-update"
+        },
+        {
+          "id": "local.munin"
         }
       ],
       "left": [
