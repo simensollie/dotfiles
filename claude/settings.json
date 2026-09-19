@@ -2,6 +2,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
+  "model": "opus",
   "hooks": {
     "Stop": [
       {
@@ -41,7 +42,17 @@
     "command": "~/.claude/statusline.sh",
     "padding": 0
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "typesafe@typesafe-ai": true
+  },
+  "extraKnownMarketplaces": {
+    "typesafe-ai": {
+      "source": {
+        "source": "github",
+        "repo": "typesafe-ai/skills"
+      }
+    }
+  },
   "effortLevel": "high",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
