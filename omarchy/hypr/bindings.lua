@@ -62,3 +62,7 @@ hl.layer_rule({
   animation = "none",
   no_screen_share = true,
 })
+
+-- >>> munin (managed by munin install.sh) >>>
+o.bind("SUPER + SHIFT + R", "Record meeting", "munin toggle")
+-- <<< munin (managed by munin install.sh) <<<
