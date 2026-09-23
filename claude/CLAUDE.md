@@ -25,3 +25,14 @@ The team migrated from Jira to Linear (cutover 2026-06-26). Linear is the canoni
 - **Tooling:** use the Linear MCP tools (e.g. `save_issue`).
 - **No custom fields on creation:** Linear has no Visma Timesheet or Fix Version equivalent, so do not set them. (Legacy Jira required both; that rule is retired.)
 - **Legacy Jira NK** (`netpower.atlassian.net`, cloud ID `2f72797b-c36b-4347-8c49-5fd1b2d28165`) is read-only, kept for ISO 27001 audit history. You may reference old `NK-####` tickets, but never create new issues there.
+
+## MCP tooling (work machine)
+
+On **simen-beelink**, Claude Code and Cursor CLI both have these MCP servers ready:
+
+- **inbox-triage** — Outlook mail + calendar (Graph)
+- **trello** — Trello boards/cards
+- **Linear** — via Linear MCP (already the default for work issues)
+
+Prefer these MCP tools over ad-hoc API/curl when they cover the task.
+

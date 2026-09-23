@@ -9,6 +9,9 @@ description: Use when comparing a customer Trello feedback board against Linear 
 decision was recorded. Only a merge timestamp compared against that customer's deploy
 cut-off proves the fix is visible.
 
+**Tooling:** On Claude Code and Cursor CLI (simen-beelink), use the **trello** MCP for board/card
+reads and writes. Prefer MCP tools over raw Trello HTTP. Linear stays on the Linear MCP.
+
 ## Scope first
 
 Pick the mode before touching anything. Subagent fan-out is for boards, not cards.
