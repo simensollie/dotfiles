@@ -12,9 +12,17 @@ confirmed row by row, then log them. Never write to Severa before the user says
 Default period: Monday of the current week through today (Europe/Oslo). Accept
 any other range the user gives.
 
+## Agent portability
+
+Works in Claude Code and Cursor (both load it from their personal skills dir).
+Tool names below are Claude Code's. In another agent, use the same MCP server's
+equivalent tool. If a source has no connector there (Cursor currently has only
+severa, inbox-triage and trello: no Linear, no Teams, no sent-mail search),
+skip it and list the skipped sources above the tables so gaps are visible.
+
 ## 1. Identity and what is already logged
 
-- Identities (Severa email, Outlook/Teams address) are in `~/.config/claude-private/severa-weekly-hours/conventions.md`
+- Identities (Severa email, Outlook/Teams address) are in `~/.config/agent-private/severa-weekly-hours/conventions.md`
   (private, not in dotfiles). Read it first. `mcp__severa__whoami` confirms the Severa one.
 - `mcp__severa__list_hours` with `user_emails: [<Severa email>]` for the
   period. Sum per day. Existing rows are facts: never re-suggest them, and treat

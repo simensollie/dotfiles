@@ -34,6 +34,23 @@ ln -sf ~/dev/dotfiles/claude/statusline.sh ~/.claude/statusline.sh
 ln -sf ~/dev/dotfiles/claude/skills ~/.claude/skills
 ```
 
+### Cursor
+
+Cursor loads personal skills from `~/.cursor/skills/`. Link the shared work skills:
+
+```bash
+mkdir -p ~/.cursor/skills
+for s in severa-weekly-hours trello-linear-reconcile; do
+  ln -sfn ~/dev/dotfiles/claude/skills/$s ~/.cursor/skills/$s
+done
+```
+
+### Private agent data
+
+Customer data, identities and billing rules used by the skills live outside this
+public repo, in `~/.config/agent-private/` (its own private git repo). Clone it
+there on each machine; skills read it by that path from Claude Code and Cursor.
+
 ### AeroSpace
 
 ```bash

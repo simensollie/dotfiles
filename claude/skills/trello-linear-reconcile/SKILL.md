@@ -67,7 +67,7 @@ deployment" — which tells the customer to wait for a rollout that will change 
 
 ## Process
 
-1. **Resolve the board** from `~/.config/claude-private/trello-linear-reconcile/boards.json`
+1. **Resolve the board** from `~/.config/agent-private/trello-linear-reconcile/boards.json`
    (private, not in dotfiles): board id, list roles, Linear projects,
    deploy target, per-board conventions. Unknown customer, or a needed role absent (many
    boards have no awaiting-deployment column) → stop and report. Never invent a column.
@@ -131,6 +131,6 @@ deployment" — which tells the customer to wait for a rollout that will change 
 
 ## Reference
 
-`~/.config/claude-private/trello-linear-reconcile/reference.md` (private, not in
+`~/.config/agent-private/trello-linear-reconcile/reference.md` (private, not in
 dotfiles) — tooling gotchas, ARIs, cheap activity harvesting, archived cards,
 per-customer package slots, Linear write hazards, GDPR. Read before the first write.
