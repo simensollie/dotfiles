@@ -39,7 +39,6 @@ hl.unbind("SUPER + SHIFT + SLASH")    -- 1Password
 hl.unbind("SUPER + SHIFT + ALT + G")  -- WhatsApp
 hl.unbind("SUPER + SHIFT + CTRL + G") -- Google Messages
 hl.unbind("SUPER + SHIFT + P")        -- Google Photos
-hl.unbind("SUPER + SHIFT + S")        -- Google Maps (new in 4.x)
 hl.unbind("SUPER + SHIFT + ALT + E")  -- Hey "new email" (new in 4.x)
 
 -- === Omasnap screenshots =================================================
@@ -51,10 +50,12 @@ hl.unbind("SUPER + SHIFT + ALT + E")  -- Hey "new email" (new in 4.x)
 hl.unbind("PRINT")
 hl.unbind("F12")
 hl.unbind("ALT + SHIFT + 4")
+hl.unbind("SUPER + SHIFT + S")  -- Was: Google Maps (new in 4.x).
 
 o.bind("PRINT", "Screenshot", "omasnap")
 o.bind("F12", "Screenshot", "omasnap")
 o.bind("ALT + SHIFT + 4", "Screenshot", "omasnap")
+o.bind("SUPER + SHIFT + S", "Screenshot", "omasnap")
 
 hl.layer_rule({
   match = { namespace = "^omasnap$" },
