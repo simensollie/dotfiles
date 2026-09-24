@@ -12,7 +12,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -n \"$(tail -c1 ~/.claude/settings.json)\" ] && printf '\\n' >> ~/.claude/settings.json"
+            "command": "[ -z \"$(tail -c1 ~/.claude/settings.json)\" ] || printf '\\n' >> ~/.claude/settings.json"
           }
         ]
       }
@@ -24,16 +24,6 @@
           {
             "type": "command",
             "command": "[ -x ~/.claude/hooks/herdr-agent-state.sh ] && bash ~/.claude/hooks/herdr-agent-state.sh session || true",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/home/siso/.claude/hooks/herdr-agent-state.sh' session",
             "timeout": 10
           }
         ]
