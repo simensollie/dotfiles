@@ -53,11 +53,14 @@ DNAME="${DIR##*/}"
 DIR_SEG="${BLUE}󰉋 "$'\033]8;;file://'"${DIR}"$'\033\\'"${DNAME}"$'\033]8;;\033\\'"${RST}"
 
 # ─── Git (cached 5s, keyed by dir) ────────────────────────────────
+# GNU stat and BSD stat spell mtime differently
+mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || echo 0; }
+
 GIT=""
 if [[ -n "$DIR" ]]; then
   CF="/tmp/claudeline-$(echo "$DIR" | cksum | cut -d' ' -f1)"
   BRANCH="" STAGED=0 MODIFIED=0
-  if [[ -f "$CF" ]] && (( NOW - $(stat -f %m "$CF") < 5 )); then
+  if [[ -f "$CF" ]] && (( NOW - $(mtime "$CF") < 5 )); then
     IFS=$'\t' read -r BRANCH STAGED MODIFIED < "$CF"
   elif git -C "$DIR" -c gc.auto=0 rev-parse --git-dir >/dev/null 2>&1; then
     BRANCH=$(git -C "$DIR" -c gc.auto=0 branch --show-current 2>/dev/null)
