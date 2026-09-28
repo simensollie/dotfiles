@@ -1,0 +1,31 @@
+#!/bin/sh
+# Mirror the X11 CLIPBOARD into the Wayland clipboard.
+# Hyprland's XWM only exports an X11 selection to Wayland while it considers an
+# X11 window focused. The Horizon client fetches the remote clipboard after its
+# window loses focus, so that export is always refused and text copied in the
+# remote desktop never reaches Wayland apps. This polls the X11 clipboard and
+# copies new text to Wayland. Wayland-owned clipboards are skipped: xclip fails
+# or returns identical content in that case.
+# Debounce: Horizon first claims the selection with a one-byte placeholder and
+# fills in the text shortly after. Copying the placeholder would let Hyprland
+# take the selection away before the real text arrives, so a change is only
+# copied once two reads 300 ms apart agree and the content is not blank.
+tmp=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/horizon-clip.XXXXXX") || exit 1
+trap 'rm -rf "$tmp"' EXIT INT TERM
+: > "$tmp/last"
+read_x() { timeout 1 xclip -o -selection clipboard > "$1" 2>/dev/null; }
+blank() { ! grep -q '[^[:space:]]' "$1"; }
+while :; do
+  if read_x "$tmp/x" && ! blank "$tmp/x" && ! cmp -s "$tmp/x" "$tmp/last"; then
+    sleep 0.3
+    if read_x "$tmp/x2" && cmp -s "$tmp/x" "$tmp/x2"; then
+      timeout 1 wl-paste -n > "$tmp/w" 2>/dev/null || : > "$tmp/w"
+      if ! cmp -s "$tmp/x" "$tmp/w"; then
+        wl-copy --type 'text/plain;charset=utf-8' < "$tmp/x"
+        [ -n "$HORIZON_CLIP_LOG" ] && printf '%s copied %s bytes\n' "$(date +%T.%N | cut -c1-12)" "$(wc -c < "$tmp/x")" >> "$HORIZON_CLIP_LOG"
+      fi
+      cp "$tmp/x" "$tmp/last"
+    fi
+  fi
+  sleep 0.3
+done

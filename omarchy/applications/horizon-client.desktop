@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Horizon Client
+Comment=Connect to Omnissa Horizon (auto-login)
+Exec=horizon-login
+Icon=horizon-client
+Type=Application
+Categories=Network;RemoteAccess;

@@ -13,7 +13,7 @@ Personal configuration files for macOS and Linux.
 | `herdr/` | [Herdr](https://herdr.dev/) terminal workspace manager for AI coding agents |
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
 | `nvim/` | Neovim plugin additions on top of the `omarchy-nvim` package |
-| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver and wallpaper, Alacritty, bash and XCompose for Linux |
+| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver and wallpaper, Alacritty, bash, XCompose and the Omnissa Horizon launcher with its clipboard bridge for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
 | `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
@@ -192,6 +192,35 @@ shared temp db, so the loser dies with `Cannot fetch updates`,
 icon. Monitor 0 is created first and wins every time, which is why it was always the
 same screen. The wrapper just puts a `flock` around the real binary; it falls through
 to an unserialized run on timeout, so it is never worse than not having it.
+
+### Omnissa Horizon (Linux)
+
+`omarchy/bin/horizon-login` launches the Horizon client with credentials from
+`~/.config/horizon-login.env` (server, user, domain) and the password from the
+keyring, and runs `omarchy/bin/horizon-clip-bridge` alongside it.
+
+The bridge exists because remote-to-local copy does not work on Hyprland
+otherwise: Hyprland's X window manager refuses X11 clipboard changes once a
+Wayland window has focus, and the Horizon client (an X11 app) only fetches the
+remote clipboard after its window loses focus. The bridge polls the X11
+clipboard with `xclip` and mirrors new text into the Wayland clipboard,
+debounced because Horizon claims the selection with a placeholder before the
+text arrives. Text only. Local-to-remote copy works without it.
+
+```bash
+yay -S omnissa-horizon-client xclip wl-clipboard
+ln -sfn "$D/omarchy/bin/horizon-login"       ~/.local/bin/horizon-login
+ln -sfn "$D/omarchy/bin/horizon-clip-bridge" ~/.local/bin/horizon-clip-bridge
+ln -sfn "$D/omarchy/applications/horizon-client.desktop" ~/.local/share/applications/horizon-client.desktop
+printf 'HORIZON_SERVER=%s\nHORIZON_USER=%s\nHORIZON_DOMAIN=%s\n' host user domain > ~/.config/horizon-login.env
+chmod 600 ~/.config/horizon-login.env
+secret-tool store --label='Horizon' service horizon   # prompts for the password
+```
+
+`horizon-login.env` is not tracked; it holds the work identity. Ctrl+V in a
+terminal does not paste, use Ctrl+Shift+V. Debug the clipboard channel with
+`MKSVchan.MKSVchanLogger.logLevel = debug` in `~/.omnissa/config` (read live, logs
+in `/tmp/omnissa-<user>/horizon-MKSVchanClient-*.log`, contain clipboard text).
 
 Verify a shadow actually takes effect in the session Hyprland spawns things from:
 

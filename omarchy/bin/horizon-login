@@ -1,0 +1,15 @@
+#!/bin/sh
+# Launch Omnissa Horizon Client with credentials from ~/.config/horizon-login.env
+# (user/domain) and the GNOME keyring (password, stored via secret-tool).
+set -e
+. "$HOME/.config/horizon-login.env"
+PASS="$(secret-tool lookup service horizon)" || true
+if [ -z "$PASS" ]; then
+  notify-send "Horizon" "No password in keyring. Run: secret-tool store --label='Horizon' service horizon" 2>/dev/null
+  exec horizon-client -s "$HORIZON_SERVER" -u "$HORIZON_USER" -d "$HORIZON_DOMAIN"
+fi
+# X11->Wayland clipboard mirror (see horizon-clip-bridge); stopped when the client exits
+"$HOME/.local/bin/horizon-clip-bridge" &
+BRIDGE=$!
+trap 'kill $BRIDGE 2>/dev/null' EXIT INT TERM
+horizon-client -s "$HORIZON_SERVER" -u "$HORIZON_USER" -d "$HORIZON_DOMAIN" -p "$PASS" -n "QMS Desktop" -q "$@"
