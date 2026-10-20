@@ -1,0 +1,12 @@
+[Unit]
+Description=Postmark reconcile review page (http://postmark.local, localhost only)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.claude/skills/trello-linear-reconcile/review-app/server.py serve --db %h/.local/state/trello-linear-reconcile/current.db --port 8765 --on-submit "systemctl --user start --no-block postmark-execute.service"
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reconcile Review</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #fff; --fg: #1b2430; --muted: #5d6b7a; --line: #d9dee5;
+  --accent: #0f766e; --accent-soft: #d9f0ec;
+  --ok: #1a7f4b; --ok-soft: #dcf2e4; --warn: #9a6200; --warn-soft: #fff0cc; --bad: #b42318; --bad-soft: #fde2df; --info: #2457a8; --info-soft: #dfe9fb;
+  --sans: system-ui, -apple-system, "Segoe UI", sans-serif; --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #121820; --panel: #1a222c; --fg: #e6ebf0; --muted: #98a6b5; --line: #2d3945;
+  --accent: #3fbfae; --accent-soft: #163a37;
+  --ok: #4fcf87; --ok-soft: #173a28; --warn: #f2b84b; --warn-soft: #3d2f0d; --bad: #ff8a7a; --bad-soft: #4a1f1a; --info: #7fb0ff; --info-soft: #1b2f4f;
+  color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5; padding: 0 16px 48px; }
+.wrap { max-width: 1000px; margin: 0 auto; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; }
+h2 { font-size: 15px; font-weight: 600; margin: 0 0 8px; }
+p { margin: 0 0 8px; } .muted { color: var(--muted); }
+.mono { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+a { color: var(--accent); }
+.topbar { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); padding: 14px 16px 12px; margin: 0 -16px; }
+.topbar .row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; max-width: 1000px; margin: 0 auto; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--line); background: var(--panel); white-space: nowrap; }
+.pill.move { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.pill.sub { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+button { font: inherit; cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); padding: 7px 14px; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+button:disabled { opacity: .55; cursor: default; }
+#status { font-size: 12.5px; }
+section.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-top: 16px; }
+.cut { display: grid; grid-template-columns: 1fr; gap: 0; }
+.cut div { display: grid; grid-template-columns: minmax(180px, 2fr) minmax(0, 3fr); align-items: baseline; gap: 2px 16px; border-bottom: 1px dashed var(--line); padding: 4px 0; min-width: 0; }
+.cut div span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.cut div span:last-child { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; min-width: 0; }
+@media (max-width: 640px) { .cut div { grid-template-columns: 1fr; } }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.stat .k { font-size: 12px; color: var(--muted); } .stat .v { font-size: 22px; font-weight: 600; margin: 2px 0; } .stat .d { font-size: 12px; color: var(--muted); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 32px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-top: 14px; border-left: 4px solid var(--line); }
+.card[data-tone="info"] { border-left-color: var(--info); } .card[data-tone="ok"] { border-left-color: var(--ok); }
+.card[data-tone="warn"] { border-left-color: var(--warn); } .card[data-tone="bad"] { border-left-color: var(--bad); }
+.card.decided { box-shadow: 0 0 0 1px var(--accent) inset; }
+.card.executed { opacity: .85; }
+.head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; padding: 12px 16px 6px; }
+.head .num { font-family: var(--mono); font-weight: 500; color: var(--muted); }
+.head .title { font-weight: 600; font-size: 15px; flex: 1 1 280px; min-width: 0; }
+.tag { font-size: 11.5px; font-weight: 500; padding: 1px 8px; border-radius: 4px; letter-spacing: .02em; text-transform: uppercase; background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.tag.info { background: var(--info-soft); color: var(--info); border-color: transparent; } .tag.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.tag.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; } .tag.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); gap: 12px 20px; padding: 6px 16px 14px; }
+@media (max-width: 720px) { .body { grid-template-columns: 1fr; } }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 12px; font-size: 13px; margin: 0; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.why { margin-top: 8px; font-size: 13px; }
+.jev { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.decide { background: var(--bg); border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.decide label { font-size: 12px; color: var(--muted); display: block; }
+.decide select, .decide textarea, .decide input[type=text] { width: 100%; font: inherit; font-size: 13px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.decide textarea { min-height: 44px; resize: vertical; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.rec { font-size: 12px; color: var(--muted); } .saved { font-size: 11.5px; color: var(--muted); min-height: 16px; }
+.exec { margin: 0 16px 14px; padding: 8px 12px; border-radius: 6px; background: var(--ok-soft); color: var(--ok); font-size: 12.5px; }
+.exec.failed { background: var(--bad-soft); color: var(--bad); }
+ul.flat { margin: 0; padding-left: 18px; } ul.flat li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="topbar"><div class="row">
+  <div><h1 id="h1">Reconcile Review</h1><p class="muted" id="sub" style="margin:0"></p></div>
+  <div class="actions">
+    <div class="counts"><span class="pill move" id="cMove">0 moves</span><span class="pill" id="cLink">0 links</span><span class="pill" id="cNew">0 new issues</span><span class="pill sub" id="cSub" hidden>Submitted</span></div>
+    <button id="acceptAll" title="Save the recommendation as your decision on every undecided card">Accept remaining recommendations</button>
+    <button class="primary" id="submit" disabled>Submit for execution</button>
+    <span id="status" class="muted"></span>
+  </div>
+</div></div>
+<div class="wrap">
+  <section class="panel" id="summary"></section>
+  <section class="panel" id="cutoff" hidden></section>
+  <div id="groups"></div>
+  <section class="panel" id="notes" hidden></section>
+</div>
+<script>
+let R = null, saveTimers = {};
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const api = (m, p, b) => fetch(p, { method: m, headers: { "Content-Type": "application/json" }, body: b ? JSON.stringify(b) : undefined }).then(r => r.json());
+
+function opts(map, sel) { return Object.entries(map).map(([k, v]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${esc(v.label ?? v)}</option>`).join(""); }
+function eff(c) { return { ...(c.recommendation || {}), ...(R.decisions[c.shortLink] || {}) }; }
+
+function render() {
+  const m = R.meta || {}, lists = m.lists || {}, lin = m.linearActions || {};
+  $("#h1").textContent = `${R.customer}: reconcile review`;
+  $("#sub").textContent = `${R.board || ""} · reviewed ${m.reviewedAt || R.createdAt.slice(0, 10)} · ${R.cards.length} cards. Decisions save as you go.`;
+  if (m.cutoff && m.cutoff.length) {
+    $("#cutoff").hidden = false;
+    $("#cutoff").innerHTML = `<h2>Deploy cut-off: ${esc(m.deployTarget || "")}</h2>${m.cutoffNote ? `<p>${esc(m.cutoffNote)}</p>` : ""}<div class="cut">${m.cutoff.map(c => `<div><span>${esc(c.slot)}</span><span>${esc(c.value)}</span></div>`).join("")}</div>`;
+  }
+  const groups = {};
+  for (const c of R.cards) (groups[c.group || c.kind] ||= []).push(c);
+  $("#groups").innerHTML = Object.entries(groups).map(([g, cards]) => `
+    <section class="panel" style="margin-top:24px"><h2>${esc(g)}</h2><p class="muted" style="margin:0">${esc((m.groupNotes || {})[g] || "")}</p></section>
+    ${cards.map(c => cardHtml(c, lists, lin)).join("")}`).join("");
+  const n = m.notes || {};
+  if (n.linearProblems?.length || n.exclusions) {
+    $("#notes").hidden = false;
+    $("#notes").innerHTML = `${n.linearProblems?.length ? `<h2>Linear problems for a human (not changed by this review)</h2><ul class="flat">${n.linearProblems.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}${n.exclusions ? `<h2 style="margin-top:12px">Not reviewed here</h2><p class="muted">${esc(n.exclusions)}</p>` : ""}`;
+  }
+  counts();
+}
+function cardHtml(c, lists, lin) {
+  const d = eff(c), dec = R.decisions[c.shortLink], ex = (R.executions[c.shortLink] || []).slice(-1)[0];
+  const ev = Object.entries(c.evidence || {}).map(([k, v]) => `<dt>${esc(k)}</dt><dd class="${/MR|cut/i.test(k) ? "mono" : ""}">${esc(v)}</dd>`).join("");
+  const jev = c.jev ? `<div class="jev">Jev: ${Object.entries(c.jev).map(([k, v]) => `${esc(k)} ${typeof v === "number" ? v.toFixed(2) : esc(v)}`).join(" · ")}</div>` : "";
+  const showLin = c.kind === "intake" || c.linearActions;
+  return `<article class="card ${dec ? "decided" : ""} ${ex ? "executed" : ""}" data-tone="${esc(c.tone || "")}" data-sl="${c.shortLink}">
+    <div class="head"><span class="num">${c.number != null ? "#" + c.number : "no number"}</span><span class="title">${esc(c.title)}</span><span class="tag ${esc(c.tone || "")}">${esc(c.verdictLabel || c.verdict || "")}</span></div>
+    <div class="body">
+      <div>
+        <dl class="kv"><dt>Column now</dt><dd>${esc(c.column)}</dd>${ev}<dt>Card</dt><dd><a href="https://trello.com/c/${c.shortLink}" target="_blank" rel="noopener">trello.com/c/${c.shortLink}</a></dd></dl>
+        <p class="why">${esc(c.why || "")}</p>${jev}
+      </div>
+      <div class="decide">
+        <div><label for="act-${c.shortLink}">${showLin ? "1. Board action" : "Action"}</label>
+          <select id="act-${c.shortLink}" data-sl="${c.shortLink}" data-field="action">${opts(lists, d.action)}</select>
+          <div class="rec">Recommended: ${esc((lists[c.recommendation?.action] || {}).label || c.recommendation?.action || "")}</div></div>
+        ${showLin ? `<div><label for="lin-${c.shortLink}">2. Linear action</label>
+          <select id="lin-${c.shortLink}" data-sl="${c.shortLink}" data-field="linear">${opts(lin, d.linear || "none")}</select>
+          <input type="text" id="iss-${c.shortLink}" data-sl="${c.shortLink}" data-field="linearIssue" value="${esc(d.linearIssue || "")}" placeholder="CER-0000" style="margin-top:6px" ${d.linear === "link" ? "" : "hidden"}>
+          <div class="rec">Recommended: ${esc((lin[c.recommendation?.linear] || {}).label || lin[c.recommendation?.linear] || c.recommendation?.linear || "none")} ${esc(c.recommendation?.linearIssue || "")}</div></div>` :
+        `<label class="check"><input type="checkbox" id="bl-${c.shortLink}" data-sl="${c.shortLink}" data-field="backlink" ${d.backlink ? "checked" : ""}> Backlink ${esc(c.issue || "")} ↔ card (silent url attachment)</label>`}
+        <div><label for="note-${c.shortLink}">Note for execution</label><textarea id="note-${c.shortLink}" data-sl="${c.shortLink}" data-field="note" placeholder="e.g. hold until config is verified">${esc(d.note || "")}</textarea></div>
+        <div class="saved" id="saved-${c.shortLink}">${dec ? "Saved " + dec.decidedAt.replace("T", " ").slice(0, 16) + "Z" + (dec.acceptedDefault ? " (accepted recommendation)" : "") : "Not yet decided (shows recommendation)"}</div>
+      </div>
+    </div>
+    ${ex ? `<div class="exec ${ex.ok === false ? "failed" : ""}">Executed ${esc(ex.executedAt || "")}: ${esc(ex.summary || JSON.stringify(ex))}</div>` : ""}
+  </article>`;
+}
+function counts() {
+  const lists = R.meta.lists || {}; let moves = 0, links = 0, creates = 0, decided = 0;
+  for (const c of R.cards) {
+    const dec = R.decisions[c.shortLink]; if (!dec) continue; decided++;
+    if (lists[dec.action]?.id) moves++;
+    if (dec.backlink || dec.linear === "link") links++;
+    if (dec.linear === "create") creates++;
+  }
+  $("#cMove").textContent = `${moves} move${moves === 1 ? "" : "s"}`;
+  $("#cLink").textContent = `${links} link${links === 1 ? "" : "s"}`;
+  $("#cNew").textContent = `${creates} new issue${creates === 1 ? "" : "s"}`;
+  $("#cSub").hidden = !R.submittedAt;
+  $("#submit").disabled = decided === 0 || !!R.executedAt;
+  $("#acceptAll").disabled = decided === R.cards.length || !!R.executedAt;
+  $("#submit").textContent = decided === R.cards.length ? "Submit for execution" : `Submit (${decided}/${R.cards.length} decided)`;
+  $("#status").textContent = R.executedAt ? `Executed ${R.executedAt}.`
+    : R.submittedAt ? (R.executeHook ? `Submitted ${R.submittedAt}. Execution started; this page locks when it finishes.` : `Submitted ${R.submittedAt}. Tell Claude to execute.`)
+    : "Decisions save on change.";
+  schedulePoll();
+  summary();
+}
+function summary() {
+  const lists = R.meta.lists || {}, lin = R.meta.linearActions || {};
+  const total = R.cards.length; let decided = 0, changed = 0, moves = 0, backlinks = 0, links = 0, creates = 0, stays = 0;
+  const byVerdict = {}, byGroup = {}, moveTo = {}, byColumn = {};
+  for (const c of R.cards) {
+    const d = eff(c), dec = R.decisions[c.shortLink], rec = c.recommendation || {};
+    byVerdict[c.verdictLabel || c.verdict || "?"] = (byVerdict[c.verdictLabel || c.verdict || "?"] || 0) + 1;
+    byGroup[c.group || c.kind] = (byGroup[c.group || c.kind] || 0) + 1;
+    byColumn[c.column] = (byColumn[c.column] || 0) + 1;
+    if (dec) { decided++; if (dec.action !== rec.action || (dec.linear || "none") !== (rec.linear || "none") || !!dec.backlink !== !!rec.backlink) changed++; }
+    if (lists[d.action]?.id) { moves++; const l = lists[d.action].label.replace(/^Move to /, ""); moveTo[l] = (moveTo[l] || 0) + 1; } else stays++;
+    if (d.backlink) backlinks++;
+    if (d.linear === "link") links++;
+    if (d.linear === "create") creates++;
+  }
+  const li = o => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<li>${esc(k)}: <b>${v}</b></li>`).join("");
+  const writes = moves + backlinks + links + creates;
+  $("#summary").innerHTML = `<h2>Summary</h2>
+    <div class="stats">
+      <div class="stat"><div class="k">Cards reviewed</div><div class="v">${total}</div><div class="d">${Object.entries(byGroup).map(([k, v]) => `${v} ${esc(k.toLowerCase())}`).join(" · ")}</div></div>
+      <div class="stat"><div class="k">Decided</div><div class="v">${decided} <span class="muted" style="font-size:13px;font-weight:400">of ${total}</span></div><div class="d">${changed ? `${changed} differ from the recommendation` : "none differ from the recommendation"}${R.submittedAt ? " · submitted" : ""}${R.executedAt ? " · executed" : ""}</div></div>
+      <div class="stat"><div class="k">Proposed writes</div><div class="v">${writes}</div><div class="d">${moves} move${moves === 1 ? "" : "s"} · ${creates} new issue${creates === 1 ? "" : "s"} · ${links} link${links === 1 ? "" : "s"} · ${backlinks} backlink${backlinks === 1 ? "" : "s"}</div></div>
+      <div class="stat"><div class="k">Stay put</div><div class="v">${stays}</div><div class="d">no card move</div></div>
+    </div>
+    <div class="cols">
+      <div><div class="muted" style="font-size:12px">Moves by target column</div><ul class="flat">${li(moveTo) || "<li>none</li>"}</ul></div>
+      <div><div class="muted" style="font-size:12px">Verdicts</div><ul class="flat">${li(byVerdict)}</ul></div>
+      <div><div class="muted" style="font-size:12px">Current columns</div><ul class="flat">${li(byColumn)}</ul></div>
+    </div>
+    <p class="muted" style="margin:10px 0 0;font-size:12px">Counts use your decision where one is saved, otherwise the recommendation.</p>`;
+}
+function current(sl) {
+  const c = R.cards.find(x => x.sl === sl || x.shortLink === sl), lists = R.meta.lists || {};
+  const action = $(`#act-${sl}`).value;
+  const d = { action, targetListId: lists[action]?.id || null, note: $(`#note-${sl}`).value.trim() };
+  const lin = $(`#lin-${sl}`); if (lin) { d.linear = lin.value; d.linearIssue = lin.value === "link" ? $(`#iss-${sl}`).value.trim().toUpperCase() : ""; }
+  const bl = $(`#bl-${sl}`); if (bl) d.backlink = bl.checked;
+  return d;
+}
+async function save(sl) {
+  const el = $(`#saved-${sl}`); el.textContent = "Saving…";
+  try { const d = await api("PUT", `/api/decision/${sl}`, current(sl)); R.decisions[sl] = d; R.submittedAt = null;
+    el.textContent = "Saved " + d.decidedAt.replace("T", " ").slice(0, 16) + "Z"; document.querySelector(`article[data-sl="${sl}"]`).classList.add("decided"); counts(); }
+  catch (e) { el.textContent = "Save failed. Is the server running?"; }
+}
+document.addEventListener("change", e => {
+  const sl = e.target.dataset.sl; if (!sl) return;
+  if (e.target.dataset.field === "linear") { const i = $(`#iss-${sl}`); if (i) i.hidden = e.target.value !== "link"; }
+  clearTimeout(saveTimers[sl]); save(sl);
+});
+document.addEventListener("input", e => {
+  const sl = e.target.dataset.sl, f = e.target.dataset.field; if (!sl || (f !== "note" && f !== "linearIssue")) return;
+  clearTimeout(saveTimers[sl]); saveTimers[sl] = setTimeout(() => save(sl), 800);
+});
+let pollTimer = null;
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  if (R.submittedAt && !R.executedAt && R.executeHook)
+    pollTimer = setTimeout(async () => { R = await api("GET", "/api/review"); render(); }, 15000);
+}
+$("#submit").addEventListener("click", async () => { await api("POST", "/api/submit"); R = await api("GET", "/api/review"); render(); });
+$("#acceptAll").addEventListener("click", async () => { await api("POST", "/api/accept-all"); R = await api("GET", "/api/review"); render(); });
+api("GET", "/api/review").then(d => { R = d; render(); });
+</script>
+</body>
+</html>

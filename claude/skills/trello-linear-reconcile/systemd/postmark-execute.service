@@ -1,0 +1,7 @@
+[Unit]
+Description=Postmark: execute a submitted review (Trello moves, Linear issues)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.claude/skills/trello-linear-reconcile/scripts/postmark_execute.sh
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin

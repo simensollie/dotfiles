@@ -9,8 +9,11 @@ description: Use when comparing a customer Trello feedback board against Linear 
 decision was recorded. Only a merge timestamp compared against that customer's deploy
 cut-off proves the fix is visible.
 
-**Tooling:** On Claude Code and Cursor CLI (simen-beelink), use the **trello** MCP for board/card
-reads and writes. Prefer MCP tools over raw Trello HTTP. Linear stays on the Linear MCP.
+**Tooling:** Trello is **only** the local `mcp__trello__*` server on your work machine, for every read
+and write. The claude.ai Trello connector is not used, not even as a fallback (user decision
+2026-10-06). Linear stays on the Linear MCP.
+Human review happens in the local **review app** (`review-app/`, see below), never by
+asking the user to answer a long table in chat.
 
 ## Scope first
 
@@ -80,11 +83,93 @@ deployment" — which tells the customer to wait for a rollout that will change 
    every card title, others number none and reuse `idShort` across imported duplicates.
    `shortLink` and url attachments are always unique; prefer them when in doubt. Never
    join on `idShort` without first checking it is unique on that board.
-4. **Present the verdict table and stop.** No writes before the human confirms.
-5. **Write Trello only**: move plus one comment per card, in the board's comment language.
-   Then backlink both directions, idempotently.
+4. **Present the verdict table, then open the review app and stop.** No writes before the
+   human submits. Full sweep and spot check go through the app (see "Review app" below);
+   a single card may be confirmed in chat.
+5. **Execute exactly what the app exported.** Trello: move, the user's own comment text if
+   they wrote one, silent url attachment. Linear: create issues for `linear: create` (org
+   issue format, card linked, written as a customer request), add `links:` for
+   `linear: link`. Backlink both directions, idempotently. Record results back into the db.
 6. **Report Linear problems, do not fix them** — stale states, mis-filed MR links, false
-   Dones go in the report for a human.
+   Dones go in the report and the app's notes panel for a human.
+
+## Review app
+
+`review-app/` next to this file: a local page (stdlib Python, SQLite, no deps) where the
+human confirms or changes every recommendation. Decisions live in one SQLite file per run,
+so a review survives a closed terminal and can be resumed or re-executed.
+
+```bash
+APP=~/.claude/skills/trello-linear-reconcile/review-app
+DB=~/.local/state/trello-linear-reconcile/<customer>-<YYYY-MM-DD>.db   # mkdir -p first
+python3 $APP/jev_assist.py --input review.json --output review.json [--candidates cands.json]  # optional, needs TYPESAFE_API_KEY
+python3 $APP/server.py init  --db $DB --input review.json
+python3 $APP/server.py serve --db $DB --port 8765      # run_in_background; give the user http://127.0.0.1:8765
+python3 $APP/server.py status --db $DB                  # poll until submittedAt is set
+python3 $APP/server.py export --db $DB > decisions.json # effective decision per card (decision, else recommendation)
+python3 $APP/server.py record --db $DB --input results.json   # after executing
+```
+
+- `review.json` schema and an example are in `review-app/README.md`. Every card carries the
+  five verdict cells as `evidence`, a one-paragraph `why`, and a `recommendation`.
+- Intake cards (`kind: intake`) get two decisions: board action and Linear action
+  (`none | create | link` + identifier). Reconciled cards get board action plus a backlink
+  checkbox. Offer **every** column in `lists`, including In Progress and Accepted; enforce
+  the resolved-to-in-flight rule at execution time and report refusals, do not hide options.
+- **Untouched cards are not decisions.** `export` marks each row `source: decision` or
+  `source: recommendation`. Execute recommendations only when the user says so in chat or
+  pressed "Accept remaining recommendations" (then they are stored as decisions).
+- Any change after submit clears `submittedAt`. Re-check `status` right before executing.
+- `record` stores per-card results (`{shortLink, ok, summary, executedAt}`) and sets
+  `executedAt`, which locks the page. Denied or skipped writes go in as `ok: false` with the
+  reason, so the next session sees what is still pending.
+- Write no customer names or real case data into `review.json`; the page is local but the
+  db file is kept.
+
+### Execute-submitted mode
+
+Invoked as `execute-submitted --db <path>` (headless, nobody can answer questions):
+
+1. `status --db`: stop silently unless `submittedAt` is set and `executedAt` is not.
+2. `export --db` → decisions. Resolve the board from the register by the db's `customer`;
+   verify list ids with `get_lists` before any write.
+3. Per decision: move (`targetListId`) → `move_card`; `archive` → `archive_card`;
+   `linear: create` → `save_issue` (org format, card link in `links`) + `save_customer_need`,
+   then attach the issue URL to the card; `linear: link` → `save_issue` with `links:` + card
+   attachment; `backlink: true` → attach if no `/c/<shortLink>` attachment exists.
+   `get_card` accepts the shortLink. `status --db` again right before the first write; any
+   change after submit clears `submittedAt`, and then you stop.
+4. Never post a card comment. Never move a resolved card into an in-flight role; record it
+   as `ok: false, "refused: resolved → in-flight"`.
+5. `record --db --input results.json`, one row per card, `ok: false` + reason for anything
+   denied or failed. Mandatory even if every write failed: `executedAt` is what locks the
+   page, and nothing else unlocks it.
+6. Print a short report. Nothing else.
+
+Standing service: `postmark-review.service` serves `current.db` on 8765 with
+`--on-submit "systemctl --user start --no-block postmark-execute.service"`, which runs
+`scripts/postmark_execute.sh` (log in `~/.local/state/trello-linear-reconcile/logs/`,
+desktop notification on finish). After `init`:
+`ln -sfn $DB ~/.local/state/trello-linear-reconcile/current.db && systemctl --user restart postmark-review`.
+
+### Jev pre-pass (optional)
+
+`jev_assist.py` asks TypeSafe's Jev model three narrow questions per card and writes the
+answers into `card.jev` for the reviewer to see. Code keeps the cut-off arithmetic and the
+verdict table; Jev only supplies semantic judgments that are otherwise guesswork:
+
+| Judgment | Type | Used for |
+|---|---|---|
+| `customer_rejects` | Noul on the latest customer comment | flags merged-before-cut-off cards the customer still rejects, the row most often misfiled as "awaiting deployment" |
+| `needs_activation` | Noul on issue description + comments | surfaces Live-but-inert candidates (flag, appsettings key, DB upgrade, job) |
+| `issue_match` | Choice over candidate Linear issues, plus `none` | intake cards: proposes `link <id>` instead of `create` when a candidate clearly tracks the same ask |
+
+Feed it `customerComment`, `issueText` and a `candidates.json` of up to ~8 issues per
+intake card (from the Linear topic searches you already run). The key lives in
+`~/.config/agent-private/trello-linear-reconcile/env` as `TYPESAFE_API_KEY=...`; the script
+reads that file itself. Never `cat`, `source` or `grep` it from a shell command (the
+permission classifier blocks credential reads and the denial sticks for the session).
+Without a key the script passes the file through unchanged.
 
 ## Backlinking
 
@@ -120,7 +205,7 @@ deployment" — which tells the customer to wait for a rollout that will change 
 | "Linear says Done, so it shipped" | Done is a recorded decision. Shipping is a timestamp. |
 | "glab says Unauthenticated, the token expired" | `glab` defaults to gitlab.com, which has no token. Set `GITLAB_HOST`. |
 | "I'll check the project named after the customer" | Work splits across projects and teams. Use every one in the register. |
-| "The Trello connector 403s, so I have no access" | Two Trello servers exist. Fall back to the other. |
+| "The local Trello server 403s, so I'll try the claude.ai connector" | No. The local server's token identity needs board access; fix that, report it, and stop. |
 | "Linear's MR attachment shows merge state" | Subtitles are null. Merge state comes from GitLab only. |
 | "I'll skip the deploy check and caveat it" | That is the step that turns a guess into an answer. |
 | "The register lists the columns, so I can write" | Verify list ids against live data first. Boards gain columns. |
