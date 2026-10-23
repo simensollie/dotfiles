@@ -31,7 +31,8 @@ The team migrated from Jira to Linear (cutover 2026-06-26). Linear is the canoni
 
 On **simen-beelink**, Claude Code and Cursor CLI both have these MCP servers ready:
 
-- **inbox-triage** — Outlook mail + calendar (Graph)
+- **Microsoft 365** (claude.ai connector, `mcp__claude_ai_Microsoft_365__*`) — Outlook mail/calendar, Teams, SharePoint. Default for any search or read in M365. Authenticate via `/mcp` if tools are missing.
+- **inbox-triage** — only for the explicit inbox-triage workflow (flag/archive/draft/digest). Not for mail search; no Teams scope.
 - **trello** — Trello boards/cards
 - **Linear** — via Linear MCP (already the default for work issues)
 

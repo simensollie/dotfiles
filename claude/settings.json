@@ -46,11 +46,12 @@
       }
     }
   },
-  "effortLevel": "high",
   "outputStyle": "Concise",
+  "effortLevel": "high",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
+  "switchModelsOnFlag": true,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
