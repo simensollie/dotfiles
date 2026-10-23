@@ -22,6 +22,10 @@ o.bind("SUPER + SHIFT + C", "Calendar", { webapp = "https://calendar.proton.me" 
 hl.unbind("SUPER + SHIFT + E")
 o.bind("SUPER + SHIFT + E", "Email", { webapp = "https://mail.proton.me" })
 
+-- Was: Files in the home directory.
+hl.unbind("SUPER + SHIFT + F")
+o.bind("SUPER + SHIFT + F", "File manager", { launch = "nautilus --new-window " .. os.getenv("HOME") .. "/Downloads" })
+
 -- Was: Omawrite.
 hl.unbind("SUPER + SHIFT + W")
 o.bind("SUPER + SHIFT + W", "Typora", { launch = "typora --enable-wayland-ime" })
@@ -30,6 +34,10 @@ o.bind("SUPER + SHIFT + W", "Typora", { launch = "typora --enable-wayland-ime" }
 
 o.bind("SUPER + SHIFT + I", "Cursor", { launch = "cursor" })
 o.bind("SUPER + SHIFT + T", "Activity", { tui = "btop" })
+o.bind("SUPER + SHIFT + H", "Horizon (QMS Desktop)", {
+  launch = os.getenv("HOME") .. "/.local/bin/horizon-login",
+  focus = "^Horizon-client$",
+})
 
 -- === Disable Omarchy 4 defaults you don't use ===========================
 -- These were commented out in your pre-4.x bindings.conf, and Omarchy 4
@@ -66,4 +74,5 @@ hl.layer_rule({
 
 -- >>> munin (managed by munin install.sh) >>>
 o.bind("SUPER + SHIFT + R", "Record meeting", "munin toggle")
+o.bind("SUPER + CTRL + SHIFT + R", "Split meeting here", "munin split --now")
 -- <<< munin (managed by munin install.sh) <<<

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "siso.lock",
+  "name": "Certain QMS Lock Screen",
+  "version": "1.0.0",
+  "author": "Simen Sollie",
+  "description": "Omarchy lock with the screensaver branding art animated behind the password field.",
+  "omarchy": {
+    "capabilities": [
+      "authentication"
+    ],
+    "clonedFrom": "omarchy.lock"
+  },
+  "kinds": [
+    "service"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml"
+  }
+}

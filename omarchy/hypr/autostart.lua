@@ -1,7 +1,8 @@
 -- Extra autostart processes.
 
 -- ActivityWatch
-o.launch_on_start("aw-qt")
+-- Bundled Qt Wayland plugin is broken (libwayland-client too old), force xcb/XWayland
+o.launch_on_start("env QT_QPA_PLATFORM=xcb aw-qt")
 o.launch_on_start("aw-watcher-window-hyprland")
 o.launch_on_start("aw-watcher-media-player")
 o.launch_on_start("aw-watcher-herdr")
