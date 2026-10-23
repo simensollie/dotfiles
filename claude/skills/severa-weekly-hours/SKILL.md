@@ -28,6 +28,27 @@ skip it and list the skipped sources above the tables so gaps are visible.
   period. Sum per day. Existing rows are facts: never re-suggest them, and treat
   their descriptions as evidence of what was already covered.
 
+### Which days are missing
+
+A day is complete only when hours + absences for that date reach the workday
+target (7.5h). Check every weekday in the period individually:
+
+1. `list_hours` for the range, sum `hours` per date (script it; the output is
+   long).
+2. `report_registrations` for the same range, add each absence's duration to
+   its date (`end` minus `start`, or 7.5h when `is_all_day`).
+3. Flag every weekday under 7.5h. Show a per-day table with the registered
+   hours, so the user can see short days, not just empty ones.
+
+Do not answer from `report_registrations.missing_days` (it lists only days
+with zero entries, and includes weekends) or from period totals; a day with
+some entries can still be short, and that is the usual case (flexi, sick
+child, half days).
+
+Severa's "day completed" flag is separate from the hours and is not exposed by
+the MCP. If the user says a day is missing but it has 7.5h here, say so and
+suggest marking the day as completed in the Severa UI.
+
 ## 2. Gather activity (run in parallel)
 
 | Source | How | What it gives |
@@ -102,6 +123,31 @@ IDs, for example "TUE-7: which customer phase?". Then: "Reply `go`, or edit by I
 Apply edits by ID and re-show only the changed rows, unless the user asks for
 the full table.
 
+### Review app
+
+Same rows, approved in a local page (`review-app/`, stdlib Python + SQLite) where the user
+can approve/drop each row and edit hours, phase (dropdown of resolved phases) and
+description. State lives outside the dotfiles repo, one file per ISO week:
+
+```bash
+APP=~/.claude/skills/severa-weekly-hours/review-app; D=~/.local/state/severa-weekly-hours
+python3 $APP/jev_assist.py --input $D/<YYYY-Www>.json --output $D/<YYYY-Www>.json   # optional, needs TYPESAFE_API_KEY
+python3 $APP/server.py init   --db $D/<YYYY-Www>.db --input $D/<YYYY-Www>.json
+python3 $APP/server.py serve  --db $D/<YYYY-Www>.db --port 8766   # run_in_background; give http://127.0.0.1:8766
+python3 $APP/server.py export --db $D/<YYYY-Www>.db               # on "go": log rows with status approve only
+python3 $APP/server.py record --db $D/<YYYY-Www>.db --input results.json
+```
+
+Input schema is in `review-app/README.md`. Give every phase a `hint` built from the
+conventions file's work → phase table (Jev scores far better with it), and put the day's
+existing Severa rows in `days[].existing` so the duplicate check and the band's
+"in Severa" list work. Jev is advisory: rows it disagrees with (confidence ≥ 0.6) or thinks
+are already logged get a marker and a line in the row's evidence panel; never change a
+row because of it. Mention flagged rows in the open questions. Offer the app alongside the tables; edits by ID
+in chat still work (apply them with `PUT /api/row/<ID>` so the page stays in sync).
+On "go", log from `export`, skip rows already `logged`, then `record` per ID
+(`{"results":[{"id":"MON-1","ok":true,"summary":"logged 0.5h, guid …"}]}`).
+
 ## 5. Log to Severa
 
 On "go":
@@ -118,7 +164,43 @@ the log responses). If it fails with "patchDocument field is required", the
 running severa MCP server predates the JSON Patch fix (severa-mcp ff0d3f6); ask
 the user to reconnect it via `/mcp`.
 
-## 6. Afterwards
+## 6. Headless modes (scheduled, no user in the loop)
+
+State dir `$D=~/.local/state/severa-weekly-hours`, app `$APP=~/.claude/skills/severa-weekly-hours/review-app`.
+Never ask questions, never print tables, never write to Severa in `daily` mode. Put a phase
+doubt in the row's `question` field (pick the most likely phase) and in `questions[]`.
+
+### `daily` (argument `daily`, run by `punchcard-daily.timer` at 15:45 on workdays)
+
+Goal: a review at http://punchcard.local with today's and last night's suggestions.
+
+1. Period: yesterday 00:00 through now (Europe/Oslo). On Monday, yesterday means Friday.
+2. Sections 1 to 3 as usual (all ActivityWatch hosts via `aw_all.sh`, calendar, mail, Teams,
+   Linear, notes repo). Evidence after 17:00 yesterday is "last night": suggest it even when
+   yesterday already has 7.5h, unless an existing Severa row's description already covers it.
+   Skip a day only when it is complete and has no uncovered evening evidence.
+3. Carry-over: if `$D/current.db` exists and is not executed, run `server.py export` on it and
+   copy every row with status other than `drop` and `logged` false into the new proposal
+   unchanged (same id, hours, phase, description, evidence). Treat those rows like Severa rows:
+   never re-suggest the same work.
+4. Write `$D/daily-<YYYY-MM-DD>.json` (schema in `review-app/README.md`; `period.start` =
+   yesterday, `period.end` = today; `days[].existing` filled from `list_hours`), then
+   `python3 $APP/server.py init --db $D/daily-<YYYY-MM-DD>.db --input ...` and
+   `ln -sfn daily-<YYYY-MM-DD>.db $D/current.db`. The review service follows the symlink.
+5. If there is nothing to suggest, write the JSON with `rows: []` anyway and still repoint
+   `current.db`, so the bar shows nothing pending.
+6. Print one line: `<n> rows, <dates>, <k> open questions`.
+
+### `log-submitted` (argument `log-submitted`, run by `punchcard-log.timer`)
+
+1. `python3 $APP/server.py status --db $D/current.db`. Stop unless `submittedAt` is set and
+   `executedAt` is null.
+2. Section 5 exactly: `export`, log every `approve` row not yet `logged`, `join_phase` and retry
+   once on `phase_membership_required`, never retry a `duplicate_work_hour` (record it as
+   `ok:false` with the message), then `record` the results per id.
+3. Re-read with `list_hours` and print per-day totals for the period on one line each.
+
+## 7. Afterwards
 
 If the user gave new conventions (a new customer phase, a different category),
 update the private conventions file, not this skill.

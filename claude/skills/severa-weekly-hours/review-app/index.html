@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timesheet Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..500,0..1,0">
+<style>
+:root {
+  --certain-blue: #1F3BF4; --certain-blue-hover: #1D4ED8; --certain-mist: #EEF3FF; --certain-sky: #BCCFFC;
+  --certain-indigo-900: #001C3A; --certain-indigo-800: #0C1862; --certain-ink: #060C31;
+  --bg-base: #F5F5F5; --bg-surface: #FFFFFF; --bg-muted: #FAFAFA; --bg-subtle: #EBEBEB;
+  --fg-1: #1F1F1F; --ink-600: #3F4947; --ink-500: #4B5563; --fg-3: #727272;
+  --border: #E0E0E0;
+  --success: #06893A; --success-bg: #F3FCF5; --warning: #A57C2A; --warning-bg: #FFF3D6; --warning-fg: #332E1B;
+  --danger: #B3261E; --danger-bg: #FFF1F1; --info-bg: #EEF3FF; --info-fg: #0C1862;
+  --accent-purple: #5E4DB2;
+  --bar-fg: #FFFFFF; --bar-muted: #D4E3FF;
+  --shadow-lg: 0 10px 20px -4px rgba(6,12,49,0.15);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --certain-blue: #6C82FF; --certain-blue-hover: #8C9DFF; --certain-mist: #18224A; --certain-sky: #4A5C9E;
+  --certain-indigo-900: #0B1530; --certain-indigo-800: #C9D5FF; --certain-ink: #E8ECF8;
+  --bg-base: #10131A; --bg-surface: #181C25; --bg-muted: #1E232E; --bg-subtle: #2A303C;
+  --fg-1: #E6E9EF; --ink-600: #B4BCC8; --ink-500: #A2ABB8; --fg-3: #8A93A0;
+  --border: #2F3542;
+  --success: #4FCF87; --success-bg: #163225; --warning: #E8B95A; --warning-bg: #3A2F12; --warning-fg: #F3DFAF;
+  --danger: #FF8A7A; --danger-bg: #44201C; --info-bg: #18224A; --info-fg: #C9D5FF;
+  --accent-purple: #A99CF0;
+  --shadow-lg: 0 10px 24px -4px rgba(0,0,0,0.5);
+  color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg-base); color: var(--fg-1); font-family: Roboto, system-ui, sans-serif; font-size: 13px; line-height: 1.4; }
+a { color: var(--certain-blue); } a:hover { color: var(--certain-blue-hover); }
+.ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 18px; line-height: 1; display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased; }
+button, select, input { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--certain-blue); outline-offset: 1px; }
+button:disabled, select:disabled, input:disabled { opacity: .45; cursor: not-allowed; }
+.mono { font-family: ui-monospace, Menlo, monospace; }
+.num { font-variant-numeric: tabular-nums; }
+
+header.top { position: sticky; top: 0; z-index: 5; background: var(--bg-surface); border-bottom: 1px solid var(--border); }
+.wrap { max-width: 1440px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+header .wrap { padding-top: 8px; padding-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 500; color: var(--certain-ink); }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
+.chip.review { background: var(--warning-bg); color: var(--warning-fg); }
+.chip.submitted { background: var(--success-bg); color: var(--success); }
+.chip.logged { background: var(--info-bg); color: var(--info-fg); }
+nav.days { display: flex; flex-wrap: wrap; gap: 6px; }
+.daychip { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 3px; min-width: 116px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); }
+.daychip:hover { color: inherit; border-color: var(--certain-sky); }
+.daychip .r1 { display: flex; justify-content: space-between; gap: 8px; }
+.daychip .lbl { font-weight: 500; color: var(--ink-600); }
+.daychip .tot { font-weight: 600; } .daychip .tot span { font-weight: 400; color: var(--fg-3); }
+.bar { height: 4px; border-radius: 9999px; background: var(--bg-subtle); display: flex; overflow: hidden; }
+.bar .a { background: var(--success); } .bar .p { background: var(--certain-sky); }
+.tone-ok { color: var(--success); } .tone-under { color: var(--warning); } .tone-over { color: var(--danger); }
+.weekchip { display: flex; flex-direction: column; justify-content: center; padding: 5px 12px; border-radius: 8px; background: var(--certain-indigo-900); color: #fff; }
+.weekchip small { font-size: 11px; color: #BCCFFC; } .weekchip b { font-weight: 600; }
+
+main { padding-top: 12px; padding-bottom: 84px; display: flex; flex-direction: column; gap: 10px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.filters button { font-size: 12px; font-weight: 500; padding: 4px 11px; border-radius: 9999px; min-height: 30px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--ink-600); }
+.filters button.on { border-color: var(--certain-blue); background: var(--certain-mist); color: var(--certain-indigo-800); }
+.filters button span { opacity: .7; }
+.qs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; flex: 1; min-width: 0; }
+.qs .qh { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; color: var(--warning); }
+.qchip { text-decoration: none; display: inline-flex; gap: 6px; max-width: 360px; padding: 2px 9px; border-radius: 9999px; background: var(--warning-bg); color: var(--warning-fg); font-size: 12px; }
+.qchip:hover { color: var(--warning-fg); text-decoration: underline; }
+.qchip .mono { font-weight: 600; white-space: nowrap; }
+.qchip .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.ts-grid { display: grid; grid-template-columns: 84px 104px minmax(180px,1.1fr) minmax(220px,2fr) minmax(140px,1fr) 92px; column-gap: 12px; align-items: center; }
+.ts-head { padding: 7px 12px; background: var(--bg-muted); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--ink-600); }
+.ts-head span:last-child { text-align: right; }
+section.day { scroll-margin-top: 64px; }
+.band { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 6px 12px; background: var(--certain-mist); border-bottom: 1px solid var(--border); }
+.band h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--certain-indigo-800); }
+.band .meta { color: var(--ink-600); } .band .sev { color: var(--fg-3); }
+.pill { font-size: 11px; font-weight: 500; padding: 1px 8px; border-radius: 9999px; }
+.pill.ok { background: var(--success-bg); color: var(--success); } .pill.under { background: var(--warning-bg); color: var(--warning); } .pill.over { background: var(--danger-bg); color: var(--danger); }
+.band .add { font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 3px; margin-left: auto; padding: 2px 8px; min-height: 28px; border-radius: 8px; border: 0; background: transparent; color: var(--certain-blue); }
+.band .note { flex-basis: 100%; font-size: 12px; color: var(--fg-3); }
+.empty { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--fg-3); }
+
+article.row { padding: 6px 12px; border-bottom: 1px solid var(--border); scroll-margin-top: 64px; box-shadow: inset 3px 0 0 transparent; }
+article.row.s-approve { box-shadow: inset 3px 0 0 var(--success); }
+article.row.s-drop { box-shadow: inset 3px 0 0 var(--danger); background: var(--bg-muted); }
+article.row.s-drop > :not(.c-act) { opacity: .6; }
+article.row.added.s-pending { box-shadow: inset 3px 0 0 var(--accent-purple); }
+article.row.logged { box-shadow: inset 3px 0 0 var(--certain-blue); }
+article.row:target { background: var(--certain-mist); }
+.c-id { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dot { width: 7px; height: 7px; flex: none; border-radius: 9999px; background: var(--certain-sky); }
+.s-approve .dot { background: var(--success); } .s-drop .dot { background: var(--danger); }
+.c-id .mono { font-size: 12px; font-weight: 600; color: var(--ink-600); }
+.c-id .q { font-size: 16px; color: var(--warning); cursor: help; }
+.c-id .lg { font-size: 16px; color: var(--certain-blue); }
+.c-id .fail { font-size: 16px; color: var(--danger); cursor: help; }
+.c-hours { display: inline-flex; align-items: center; justify-self: start; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.c-hours button { width: 30px; height: 32px; border: 0; background: var(--bg-muted); color: var(--ink-600); display: flex; align-items: center; justify-content: center; }
+.c-hours .v { min-width: 40px; text-align: center; font-size: 14px; font-weight: 600; color: var(--certain-ink); }
+.c-hours .v.changed { color: var(--warning); }
+.field { font-size: 13px; color: var(--fg-1); background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; height: 32px; width: 100%; min-width: 0; }
+select.field { padding: 0 6px; } input.field { padding: 0 9px; }
+.field.changed { border-color: var(--warning); } .field.missing { border-color: var(--danger); }
+.c-ev { font: inherit; font-size: 12px; color: var(--fg-3); background: none; border: 0; padding: 4px 0; min-height: 32px; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 4px; min-width: 0; }
+.c-ev .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.c-ev .ms { font-size: 16px; color: var(--ink-500); transition: transform .15s; }
+.c-ev:hover .t { color: var(--fg-1); }
+.c-ev[aria-expanded="true"] .ms { transform: rotate(180deg); }
+.detail { grid-column: 1 / -1; margin: 4px 0 2px; padding: 8px 12px; border-radius: 8px; background: var(--bg-muted); border: 1px solid var(--border); display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; font-size: 12.5px; }
+.detail[hidden] { display: none; }
+.detail dt { color: var(--ink-600); font-weight: 500; }
+.detail dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.detail ul { margin: 0; padding-left: 16px; } .detail li { margin: 1px 0; }
+.detail .jevflag { color: var(--accent-purple); font-weight: 500; }
+.c-id .jv { font-size: 16px; color: var(--accent-purple); cursor: help; }
+.existing { flex-basis: 100%; margin: 2px 0 0; padding-left: 18px; font-size: 12px; color: var(--ink-600); }
+.existing[hidden] { display: none; }
+.band .sevbtn { font: inherit; color: var(--fg-3); background: none; border: 0; padding: 2px 0; cursor: pointer; text-decoration: underline dotted; }
+.toolbar .evall { font-size: 12px; font-weight: 500; padding: 4px 11px; border-radius: 9999px; min-height: 30px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--ink-600); display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.c-act { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.c-act .undo { width: 26px; height: 32px; border: 0; background: none; color: var(--warning); display: flex; align-items: center; justify-content: center; }
+.c-act .undo .ms { font-size: 17px; }
+.c-act .undo[hidden] { display: none; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { width: 32px; height: 32px; border: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-surface); color: var(--ink-500); }
+.seg button + button { border-left: 1px solid var(--border); }
+.seg button.ap.on { background: var(--success); color: #fff; }
+.seg button.dr.on { background: var(--danger); color: #fff; }
+.saveerr { grid-column: 1 / -1; font-size: 12px; color: var(--danger); }
+.foot { margin: 0; font-size: 12px; color: var(--fg-3); }
+
+.dock { position: sticky; bottom: 12px; z-index: 6; padding: 0 16px; margin-top: -64px; }
+.dock .in { max-width: 1400px; margin: 0 auto; background: var(--certain-indigo-900); color: var(--bar-fg); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 7px 8px 7px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+.dock .stats { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+.dock .stats > span { display: inline-flex; align-items: center; gap: 6px; }
+.dock .muted { color: var(--bar-muted); }
+.dock .d { width: 7px; height: 7px; border-radius: 9999px; }
+.dock .hint { font-size: 12px; color: var(--bar-muted); }
+.dock .btns { display: flex; gap: 6px; align-items: center; }
+.dock .ghost { font-size: 13px; font-weight: 500; padding: 0 12px; min-height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; }
+.dock .primary { font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; min-height: 34px; border-radius: 8px; border: 0; background: #1F3BF4; color: #fff; }
+.dock .primary .ms { font-size: 16px; }
+
+@media (max-width: 980px) {
+  .ts-grid { grid-template-columns: 84px 104px minmax(0,1fr) 92px; row-gap: 6px; }
+  .ts-grid .c-desc, .ts-grid .c-ev { grid-column: 2 / 5; }
+  .ts-head { display: none; }
+}
+@media (max-width: 560px) {
+  .wrap { padding-left: 16px; padding-right: 16px; }
+  .ts-grid { grid-template-columns: minmax(0,1fr) 92px; }
+  .ts-grid .c-id { grid-column: 1 / 2; }
+  .ts-grid .c-hours { grid-column: 2 / 3; grid-row: 1; justify-self: end; }
+  .ts-grid .c-phase, .ts-grid .c-desc, .ts-grid .c-ev { grid-column: 1 / 3; }
+  .ts-grid .c-act { grid-column: 1 / 3; justify-self: end; }
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <span class="ms" style="font-size:22px;color:var(--certain-blue)">schedule</span>
+    <h1>Timesheet review</h1>
+    <span id="period" style="color:var(--fg-3)"></span>
+    <span id="status" class="chip review"></span>
+  </div>
+  <nav class="days" id="daychips" aria-label="Days"></nav>
+</div></header>
+
+<main class="wrap">
+  <div class="toolbar">
+    <div class="filters" id="filters" role="group" aria-label="Filter entries"></div>
+    <div class="qs" id="qs" hidden></div>
+    <button type="button" class="evall" id="evall" aria-pressed="false"><span class="ms" style="font-size:16px">unfold_more</span><span>Show all evidence</span></button>
+  </div>
+  <div class="card">
+    <div class="ts-grid ts-head" role="presentation"><span>Entry</span><span>Hours</span><span>Phase</span><span>Description</span><span>Evidence</span><span>Decision</span></div>
+    <div id="days"></div>
+  </div>
+  <p class="foot">Edits save as you go. Only approved entries are logged. Click the evidence on a row (or Show all evidence) for the full sources, phase path and Jev check. Submit, then tell Claude "go" in the terminal.</p>
+</main>
+
+<div class="dock"><div class="in" role="region" aria-label="Review actions">
+  <div class="stats num">
+    <span><span class="d" style="background:#7AFF80"></span><span id="cApp"></span></span>
+    <span class="muted"><span class="d" style="background:#BCCFFC"></span><span id="cPend"></span></span>
+    <span class="muted"><span class="d" style="background:#FF5656"></span><span id="cDrop"></span></span>
+    <span class="hint" id="hint"></span>
+  </div>
+  <div class="btns">
+    <button type="button" class="ghost" id="approveAll">Approve remaining</button>
+    <button type="button" class="primary" id="submit"><span class="ms">send</span><span id="submitLbl">Submit for logging</span></button>
+  </div>
+</div></div>
+
+<script>
+let S = null;
+let filter = 'all';
+const open = new Set();
+let allOpen = false;
+const $ = (s) => document.querySelector(s);
+const el = (t, a = {}, ...kids) => {
+  const e = document.createElement(t);
+  for (const [k, v] of Object.entries(a)) {
+    if (v === undefined || v === null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else e.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c);
+  return e;
+};
+const icon = (name, attrs = {}) => el('span', { class: 'ms' + (attrs.class ? ' ' + attrs.class : ''), 'aria-hidden': attrs.label ? null : 'true', 'aria-label': attrs.label, title: attrs.title }, name);
+const fmt = (h) => (Math.round(h * 10) / 10).toFixed(1);
+const fmtDate = (iso) => { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
+const api = async (m, p, b) => {
+  const r = await fetch(p, { method: m, headers: { 'Content-Type': 'application/json' }, body: b ? JSON.stringify(b) : undefined });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status); return j;
+};
+
+function eff(r) {
+  const e = S.edits[r.id] || {};
+  return { ...r, hours: e.hours ?? r.hours, phaseGuid: e.phaseGuid ?? r.phaseGuid, description: e.description ?? r.description, status: e.status || 'pending' };
+}
+const loggedOf = (id) => (S.executions[id] || []).find((x) => x.ok);
+const failOf = (id) => { const xs = (S.executions[id] || []); return !loggedOf(id) && xs.length ? xs[xs.length - 1] : null; };
+const phaseOf = (g) => S.meta.phases.find((p) => p.guid === g);
+const target = () => S.meta.target || 7.5;
+
+function state() {
+  const rows = S.rows.map(eff);
+  const approved = rows.filter((r) => r.status === 'approve');
+  const allLogged = approved.length > 0 && approved.every((r) => loggedOf(r.id));
+  return {
+    rows, approved, allLogged,
+    pending: rows.filter((r) => r.status === 'pending'),
+    dropped: rows.filter((r) => r.status === 'drop'),
+    invalid: approved.some((r) => !loggedOf(r.id) && (!r.phaseGuid || !String(r.description || '').trim())),
+  };
+}
+
+function dayStats(d, rows) {
+  let ap = 0, pe = 0;
+  for (const r of rows.filter((r) => r.day === d.day)) { if (r.status === 'approve') ap += r.hours; else if (r.status === 'pending') pe += r.hours; }
+  const sev = d.inSeveraHours || 0, total = sev + ap + pe, diff = total - target();
+  const tone = Math.abs(diff) < 0.01 ? 'ok' : diff < 0 ? 'under' : 'over';
+  const scale = Math.max(target(), total);
+  return { ap, pe, sev, total, tone,
+    toneLabel: tone === 'ok' ? 'On target' : tone === 'under' ? `${fmt(-diff)} h under` : `${fmt(diff)} h over`,
+    apPct: Math.min(100, ((sev + ap) / scale) * 100), pePct: Math.min(100, (pe / scale) * 100) };
+}
+
+function renderChrome() {
+  const st = state();
+  const p = S.meta.period;
+  $('#period').textContent = `Severa · ${fmtDate(p.start)} – ${fmtDate(p.end)}` + (S.meta.notes ? ` · ${S.meta.notes}` : '');
+  const chip = $('#status');
+  const [cls, ic, lbl] = st.allLogged ? ['logged', 'cloud_done', 'Logged'] : S.submittedAt ? ['submitted', 'task_alt', 'Submitted'] : ['review', 'rate_review', 'In review'];
+  chip.className = 'chip ' + cls; chip.replaceChildren(icon(ic, {}), lbl);
+  chip.firstChild.style.fontSize = '15px';
+
+  let week = 0;
+  const chips = S.meta.days.map((d) => {
+    const s = dayStats(d, st.rows); week += s.total;
+    const bar = el('span', { class: 'bar', 'aria-hidden': 'true' }, el('span', { class: 'a' }), el('span', { class: 'p' }));
+    bar.children[0].style.width = s.apPct + '%'; bar.children[1].style.width = s.pePct + '%';
+    return el('a', { class: 'daychip num', href: '#' + d.day, title: `${d.label}: ${s.toneLabel}` },
+      el('span', { class: 'r1' }, el('span', { class: 'lbl' }, d.label.replace(/\s\d{4}-(\d{2})-(\d{2})$/, ' $2/$1')), el('span', { class: 'tot tone-' + s.tone }, fmt(s.total), el('span', {}, '/' + fmt(target()))) ), bar);
+  });
+  for (const d of S.meta.days) {
+    const s = dayStats(d, st.rows), m = document.getElementById(`meta-${d.day}`), pl = document.getElementById(`pill-${d.day}`);
+    if (m) m.textContent = `${fmt(s.total)} / ${fmt(target())} h`;
+    if (pl) { pl.className = 'pill ' + s.tone; pl.textContent = s.toneLabel; }
+  }
+  chips.push(el('span', { class: 'weekchip num' }, el('small', {}, 'Week'), el('b', {}, fmt(week) + ' h')));
+  $('#daychips').replaceChildren(...chips);
+
+  const counts = { all: st.rows.length, pending: st.pending.length, approve: st.approved.length, drop: st.dropped.length };
+  $('#filters').replaceChildren(...[['all', 'All'], ['pending', 'Pending'], ['approve', 'Approved'], ['drop', 'Dropped']].map(([k, l]) =>
+    el('button', { type: 'button', class: filter === k ? 'on' : '', 'aria-pressed': String(filter === k), onclick: () => { filter = k; render(); } }, l + ' ', el('span', { class: 'num' }, String(counts[k])))));
+
+  const qs = st.allLogged ? [] : (S.meta.questions || []);
+  $('#qs').hidden = !qs.length;
+  $('#qs').replaceChildren(el('span', { class: 'qh' }, icon('help'), `${qs.length} question${qs.length === 1 ? '' : 's'}:`),
+    ...qs.map((q) => {
+      const m = q.match(/^([A-Z]{3}-\d+(?:\s*\/\s*[A-Z]{3}-\d+)*)\s*:\s*(.*)$/);
+      const id = m ? m[1].split('/')[0].trim() : null;
+      return id ? el('a', { class: 'qchip', href: '#' + id, title: q }, el('span', { class: 'mono' }, m[1]), el('span', { class: 't' }, m[2]))
+                : el('span', { class: 'qchip', title: q }, el('span', { class: 't' }, q));
+    }));
+
+  const approvedH = st.approved.reduce((s, r) => s + r.hours, 0);
+  $('#cApp').textContent = `${st.approved.length} approved · ${fmt(approvedH)} h`;
+  $('#cPend').textContent = `${st.pending.length} pending`;
+  $('#cDrop').textContent = `${st.dropped.length} dropped`;
+  $('#hint').textContent = st.allLogged ? 'All approved entries are logged.' : S.submittedAt ? (S.loggingHook ? 'Submitted. Logging to Severa in the background, this page updates by itself.' : 'Submitted. Tell Claude "go" to log.')
+    : st.pending.length ? 'Decide every entry to submit.' : st.invalid ? 'Approved entries need a phase and a description.' : st.approved.length ? 'Ready to submit.' : 'Approve at least one entry.';
+  const unlockedPending = st.pending.filter((r) => !loggedOf(r.id)).length;
+  $('#approveAll').disabled = st.allLogged || unlockedPending === 0;
+  $('#submit').disabled = st.allLogged || !!S.submittedAt || st.pending.length > 0 || st.approved.length === 0 || st.invalid;
+  $('#submitLbl').textContent = st.allLogged ? 'Logged' : S.submittedAt ? 'Submitted' : 'Submit for logging';
+}
+
+const timers = {};
+function save(id, patch) {
+  S.edits[id] = { ...(S.edits[id] || {}), ...patch };
+  S.submittedAt = null;
+  renderChrome();
+  clearTimeout(timers[id]);
+  timers[id] = setTimeout(async () => {
+    const row = document.getElementById(id);
+    row?.querySelector('.saveerr')?.remove();
+    try { S.edits[id] = await api('PUT', `/api/row/${id}`, S.edits[id]); }
+    catch (e) { row?.append(el('div', { class: 'saveerr' }, 'Not saved: ' + e.message)); }
+  }, 350);
+}
+
+function phaseSelect(r, e, locked) {
+  const s = el('select', { class: 'field c-phase', 'aria-label': `${r.id} phase`, disabled: locked });
+  s.append(el('option', { value: '' }, 'Choose a phase'));
+  const groups = {};
+  for (const p of S.meta.phases) (groups[p.group || p.path.split(' > ')[0]] ||= []).push(p);
+  for (const [g, ps] of Object.entries(groups)) s.append(el('optgroup', { label: g }, ps.map((p) => el('option', { value: p.guid }, p.label || p.path.split(' > ').pop()))));
+  s.value = e.phaseGuid || '';
+  return s;
+}
+
+function rowEl(r) {
+  const lg = loggedOf(r.id), fail = failOf(r.id), locked = !!lg;
+  const e = eff(r);
+  const art = el('article', { id: r.id, class: 'row ts-grid' });
+  const sync = () => {
+    const cur = eff(r);
+    art.className = `row ts-grid s-${cur.status}` + (r.added ? ' added' : '') + (lg ? ' logged' : '');
+    const ph = phaseOf(cur.phaseGuid);
+    sel.title = ph ? ph.path : 'No phase selected';
+    sel.classList.toggle('missing', !cur.phaseGuid);
+    sel.classList.toggle('changed', !!cur.phaseGuid && cur.phaseGuid !== r.phaseGuid);
+    desc.classList.toggle('missing', !String(cur.description || '').trim());
+    desc.classList.toggle('changed', String(cur.description || '').trim() !== '' && cur.description !== r.description);
+    hv.textContent = fmt(cur.hours); hv.classList.toggle('changed', cur.hours !== r.hours);
+    dec.disabled = locked || cur.hours <= 0.5;
+    ap.classList.toggle('on', cur.status === 'approve'); ap.setAttribute('aria-pressed', String(cur.status === 'approve'));
+    dr.classList.toggle('on', cur.status === 'drop'); dr.setAttribute('aria-pressed', String(cur.status === 'drop'));
+    const edited = !r.added && !locked && (cur.hours !== r.hours || cur.phaseGuid !== r.phaseGuid || cur.description !== r.description);
+    undo.hidden = !edited;
+  };
+  const hv = el('span', { class: 'v num' });
+  const dec = el('button', { type: 'button', 'aria-label': 'Decrease hours', onclick: () => { save(r.id, { hours: Math.max(0.5, eff(r).hours - 0.5) }); sync(); } }, icon('remove'));
+  const inc = el('button', { type: 'button', 'aria-label': 'Increase hours', disabled: locked, onclick: () => { save(r.id, { hours: eff(r).hours + 0.5 }); sync(); } }, icon('add'));
+  const sel = phaseSelect(r, e, locked);
+  sel.addEventListener('change', () => { save(r.id, { phaseGuid: sel.value }); sync(); });
+  const desc = el('input', { class: 'field c-desc', type: 'text', 'aria-label': `${r.id} description`, placeholder: 'What goes into Severa', disabled: locked });
+  desc.value = e.description || '';
+  desc.addEventListener('input', () => { save(r.id, { description: desc.value }); sync(); });
+  const setStatus = (s) => () => { save(r.id, { status: eff(r).status === s ? 'pending' : s }); sync(); };
+  const ap = el('button', { type: 'button', class: 'ap', title: 'Approve', 'aria-label': `Approve ${r.id}`, disabled: locked, onclick: setStatus('approve') }, icon('check'));
+  const dr = el('button', { type: 'button', class: 'dr', title: 'Drop', 'aria-label': `Drop ${r.id}`, disabled: locked, onclick: setStatus('drop') }, icon('close'));
+  const undo = el('button', { type: 'button', class: 'undo', title: 'Edited. Reset to suggestion', 'aria-label': 'Reset to suggestion', onclick: () => {
+    save(r.id, { hours: r.hours, phaseGuid: r.phaseGuid, description: r.description });
+    sel.value = r.phaseGuid || ''; desc.value = r.description || ''; sync();
+  } }, icon('undo'));
+
+  const items = String(r.evidence || '').split(/;\s*/).map((x) => x.trim()).filter(Boolean);
+  const jev = r.jev || {};
+  const dl = el('dl', { class: 'detail', id: `${r.id}-detail` },
+    el('dt', {}, 'Evidence'), el('dd', {}, items.length ? el('ul', {}, items.map((x) => el('li', { class: 'num' }, x))) : 'None recorded'),
+    r.question ? [el('dt', {}, 'Question'), el('dd', {}, r.question)] : null,
+    el('dt', {}, 'Suggested'), el('dd', { class: 'num' }, `${fmt(r.hours)} h · ${(phaseOf(r.phaseGuid) || {}).path || 'no phase'} · ${r.description || ''}`),
+    jev.phaseName ? [el('dt', {}, 'Jev'), el('dd', {}, jev.flag ? el('span', { class: 'jevflag' }, jev.flag) : `Agrees: ${jev.phaseName} (${jev.phaseConfidence})`,
+      jev.alreadyLogged != null ? ` · already in Severa ${jev.alreadyLogged}` : '')] : null,
+    jev.error ? [el('dt', {}, 'Jev'), el('dd', {}, 'Not available: ' + jev.error)] : null,
+    lg ? [el('dt', {}, 'Severa'), el('dd', {}, lg.summary || 'Logged')] : null,
+    fail ? [el('dt', {}, 'Severa'), el('dd', { style: 'color:var(--danger)' }, 'Failed: ' + (fail.summary || ''))] : null);
+  const detail = dl;
+  const isOpen = () => allOpen || open.has(r.id);
+  const evBtn = el('button', { type: 'button', class: 'c-ev num', 'aria-controls': `${r.id}-detail`, title: 'Show all evidence', onclick: () => {
+    if (open.has(r.id)) open.delete(r.id); else open.add(r.id);
+    detail.hidden = !isOpen(); evBtn.setAttribute('aria-expanded', String(isOpen()));
+  } }, el('span', { class: 't' }, items.join(' · ') || '—'), icon('expand_more'));
+  detail.hidden = !isOpen(); evBtn.setAttribute('aria-expanded', String(isOpen()));
+
+  art.append(
+    el('div', { class: 'c-id' }, el('span', { class: 'dot', 'aria-hidden': 'true' }), el('span', { class: 'mono' }, r.id),
+      r.question && !locked ? icon('help', { class: 'q', title: r.question, label: 'Open question: ' + r.question }) : null,
+      jev.flag && !locked ? icon('smart_toy', { class: 'jv', title: jev.flag, label: jev.flag }) : null,
+      lg ? icon('cloud_done', { class: 'lg', title: 'Logged in Severa: ' + (lg.summary || 'ok'), label: 'Logged in Severa' }) : null,
+      fail ? icon('error', { class: 'fail', title: 'Log failed: ' + (fail.summary || ''), label: 'Log failed' }) : null),
+    el('div', { class: 'c-hours', role: 'group', 'aria-label': `${r.id} hours` }, dec, hv, inc),
+    sel, desc,
+    evBtn,
+    el('div', { class: 'c-act' }, undo, el('div', { class: 'seg', role: 'group', 'aria-label': `${r.id} decision` }, ap, dr)),
+    detail);
+  sync();
+  return art;
+}
+
+function render() {
+  renderChrome();
+  const st = state();
+  const box = $('#days'); box.replaceChildren();
+  for (const d of S.meta.days) {
+    const s = dayStats(d, st.rows);
+    const rows = S.rows.filter((r) => r.day === d.day && (filter === 'all' || eff(r).status === filter));
+    const add = el('button', { type: 'button', class: 'add', disabled: st.allLogged, onclick: async () => {
+      try {
+        const row = await api('POST', '/api/row', { day: d.day, date: d.date });
+        S.rows.push(row); S.edits[row.id] = { status: 'pending' }; S.submittedAt = null; filter = 'all'; render();
+        document.getElementById(row.id)?.querySelector('select')?.focus();
+      } catch (e) { alert('Could not add: ' + e.message); }
+    } }, icon('add'), 'Add entry');
+    add.firstChild.style.fontSize = '16px';
+    box.append(el('section', { class: 'day', id: d.day, 'aria-label': d.label },
+      el('div', { class: 'band' },
+        el('h2', {}, d.label.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3/$2/$1')),
+        el('span', { class: 'meta num', id: `meta-${d.day}` }, `${fmt(s.total)} / ${fmt(target())} h`),
+        el('span', { class: 'pill ' + s.tone, id: `pill-${d.day}` }, s.toneLabel),
+        (d.existing && d.existing.length) ? el('button', { type: 'button', class: 'sevbtn num', 'aria-expanded': 'false', onclick: (ev) => {
+            const ul = ev.currentTarget.parentElement.querySelector('.existing'); ul.hidden = !ul.hidden; ev.currentTarget.setAttribute('aria-expanded', String(!ul.hidden)); } }, `in Severa ${fmt(s.sev)} h (${d.existing.length})`)
+          : el('span', { class: 'sev num' }, `in Severa ${fmt(s.sev)} h`),
+        add,
+        d.note ? el('span', { class: 'note' }, d.note) : null,
+        (d.existing && d.existing.length) ? el('ul', { class: 'existing', hidden: true }, d.existing.map((x) => el('li', { class: 'num' }, `${fmt(x.hours)} h · ${x.phase || ''} · ${x.description || ''}`))) : null),
+      rows.length ? rows.map(rowEl) : el('div', { class: 'empty' }, 'No entries match this filter.')));
+  }
+  if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
+}
+
+async function load() { S = await api('GET', '/api/review'); render(); }
+
+// After a submit with a logging hook, poll until the rows come back as logged.
+let pollTimer = null;
+function pollWhileLogging() {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    const cur = await api('GET', '/api/review');
+    S = cur; render();
+    const st = state();
+    if (st.allLogged || !S.submittedAt) clearInterval(pollTimer);
+  }, 10000);
+}
+
+$('#evall').onclick = (ev) => {
+  allOpen = !allOpen; if (!allOpen) open.clear();
+  ev.currentTarget.setAttribute('aria-pressed', String(allOpen));
+  ev.currentTarget.querySelector('.ms').textContent = allOpen ? 'unfold_less' : 'unfold_more';
+  ev.currentTarget.lastChild.textContent = allOpen ? 'Hide evidence' : 'Show all evidence';
+  render();
+};
+$('#approveAll').onclick = async () => { await api('POST', '/api/approve-remaining'); await load(); };
+$('#submit').onclick = async () => { const j = await api('POST', '/api/submit'); S.submittedAt = j.submittedAt; renderChrome(); if (j.loggingStarted) pollWhileLogging(); };
+load().catch((e) => { document.body.textContent = 'Failed to load: ' + e.message; });
+</script>
+</body>
+</html>
