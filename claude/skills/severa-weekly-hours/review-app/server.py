@@ -118,6 +118,9 @@ class Handler(BaseHTTPRequestHandler):
         return json.loads(self.rfile.read(n) or b"{}")
     def _reopen(self):
         self.con.execute("UPDATE review SET submitted_at=NULL WHERE id=1")
+    def _version(self):
+        r = self.con.execute("SELECT created_at, executed_at FROM review WHERE id=1").fetchone()
+        return f"{Handler._real}|{r['created_at']}|{r['executed_at'] or ''}" if r else Handler._real
     def log_message(self, *args): pass
     def do_GET(self):
         p = urlparse(self.path).path
@@ -128,7 +131,11 @@ class Handler(BaseHTTPRequestHandler):
         elif p == "/api/review":
             d = load_all(self.con) or {}
             d["loggingHook"] = bool(Handler.on_submit)
+            d["version"] = self._version()
             self._json(200, d)
+        elif p == "/api/version":
+            # cheap poll target: changes when a new review is seeded or the log job records results
+            self._json(200, {"version": self._version()})
         else:
             self._json(404, {"error": "not found"})
     def do_PUT(self):

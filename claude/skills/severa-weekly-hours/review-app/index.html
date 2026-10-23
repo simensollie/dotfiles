@@ -70,6 +70,7 @@ main { padding-top: 12px; padding-bottom: 84px; display: flex; flex-direction: c
 .filters button { font-size: 12px; font-weight: 500; padding: 4px 11px; border-radius: 9999px; min-height: 30px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--ink-600); }
 .filters button.on { border-color: var(--certain-blue); background: var(--certain-mist); color: var(--certain-indigo-800); }
 .filters button span { opacity: .7; }
+.qs[hidden] { display: none; }
 .qs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; flex: 1; min-width: 0; }
 .qs .qh { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; color: var(--warning); }
 .qchip { text-decoration: none; display: inline-flex; gap: 6px; max-width: 360px; padding: 2px 9px; border-radius: 9999px; background: var(--warning-bg); color: var(--warning-fg); font-size: 12px; }
@@ -140,6 +141,22 @@ select.field { padding: 0 6px; } input.field { padding: 0 9px; }
 .saveerr { grid-column: 1 / -1; font-size: 12px; color: var(--danger); }
 .foot { margin: 0; font-size: 12px; color: var(--fg-3); }
 
+.hero { display: flex; align-items: center; gap: 20px; padding: 22px 26px; border-radius: 16px; border: 2px solid var(--success); background: var(--success-bg); color: var(--fg-1); }
+.hero[hidden] { display: none; }
+.hero .badge { flex: none; width: 64px; height: 64px; border-radius: 9999px; background: var(--success); color: #fff; display: flex; align-items: center; justify-content: center; }
+.hero .badge .ms { font-size: 40px; font-variation-settings: 'FILL' 1, 'wght' 500; }
+.hero h2 { margin: 0 0 4px; font-size: 26px; line-height: 1.2; font-weight: 600; color: var(--success); }
+.hero p { margin: 0; font-size: 15px; color: var(--ink-600); }
+.hero.fail { border-color: var(--danger); background: var(--danger-bg); }
+.hero.fail .badge { background: var(--danger); } .hero.fail h2 { color: var(--danger); }
+.hero.pop { animation: pop .5s cubic-bezier(.2,1.4,.4,1); }
+.hero.pop .badge { animation: pop .6s .1s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hero.pop, .hero.pop .badge { animation: none; } }
+@media (max-width: 560px) { .hero { padding: 16px; gap: 14px; } .hero .badge { width: 48px; height: 48px; } .hero .badge .ms { font-size: 30px; } .hero h2 { font-size: 20px; } }
+.toast { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 10; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 9999px; background: var(--certain-indigo-900); color: #fff; box-shadow: var(--shadow-lg); font-weight: 500; transition: opacity .3s; }
+.toast[hidden] { display: none; }
+
 .dock { position: sticky; bottom: 12px; z-index: 6; padding: 0 16px; margin-top: -64px; }
 .dock .in { max-width: 1400px; margin: 0 auto; background: var(--certain-indigo-900); color: var(--bar-fg); border-radius: 12px; box-shadow: var(--shadow-lg); padding: 7px 8px 7px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
 .dock .stats { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
@@ -179,6 +196,8 @@ select.field { padding: 0 6px; } input.field { padding: 0 9px; }
 </div></header>
 
 <main class="wrap">
+  <div class="toast" id="toast" role="status" hidden></div>
+  <section class="hero" id="hero" aria-live="polite" hidden></section>
   <div class="toolbar">
     <div class="filters" id="filters" role="group" aria-label="Filter entries"></div>
     <div class="qs" id="qs" hidden></div>
@@ -262,8 +281,36 @@ function dayStats(d, rows) {
     apPct: Math.min(100, ((sev + ap) / scale) * 100), pePct: Math.min(100, (pe / scale) * 100) };
 }
 
+// Big confirmation once the log job has written the approved hours (or a clear failure notice).
+let wasLogged = null;
+function renderHero(st) {
+  const hero = $('#hero');
+  const failed = st.approved.filter((r) => failOf(r.id));
+  if (!st.allLogged && !(S.executedAt && failed.length)) { hero.hidden = true; wasLogged = st.allLogged; return; }
+  const p = S.meta.period;
+  const range = p.start === p.end ? fmtDate(p.start) : `${fmtDate(p.start)} – ${fmtDate(p.end)}`;
+  const at = S.executedAt ? new Date(S.executedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+  if (st.allLogged) {
+    const h = st.approved.reduce((s, r) => s + r.hours, 0);
+    hero.className = 'hero';
+    hero.replaceChildren(el('div', { class: 'badge' }, icon('check')),
+      el('div', {}, el('h2', {}, 'Hours written to Severa'),
+        el('p', { class: 'num' }, `${st.approved.length} entr${st.approved.length === 1 ? 'y' : 'ies'} · ${fmt(h)} h · ${range}` + (at ? ` · logged ${at}` : ''))));
+    if (wasLogged === false) { void hero.offsetWidth; hero.classList.add('pop'); }
+  } else {
+    hero.className = 'hero fail';
+    hero.replaceChildren(el('div', { class: 'badge' }, icon('error')),
+      el('div', {}, el('h2', {}, `${failed.length} of ${st.approved.length} entries failed to log`),
+        el('p', {}, 'Open the rows marked with a red icon for the Severa error.')));
+  }
+  hero.hidden = false;
+  document.title = st.allLogged ? 'Logged · Timesheet review' : 'Timesheet review';
+  wasLogged = st.allLogged;
+}
+
 function renderChrome() {
   const st = state();
+  renderHero(st);
   const p = S.meta.period;
   $('#period').textContent = `Severa · ${fmtDate(p.start)} – ${fmtDate(p.end)}` + (S.meta.notes ? ` · ${S.meta.notes}` : '');
   const chip = $('#status');
@@ -440,17 +487,26 @@ function render() {
 
 async function load() { S = await api('GET', '/api/review'); render(); }
 
-// After a submit with a logging hook, poll until the rows come back as logged.
-let pollTimer = null;
-function pollWhileLogging() {
-  clearInterval(pollTimer);
-  pollTimer = setInterval(async () => {
-    const cur = await api('GET', '/api/review');
-    S = cur; render();
-    const st = state();
-    if (st.allLogged || !S.submittedAt) clearInterval(pollTimer);
-  }, 10000);
+function toast(msg) {
+  const t = $('#toast'); t.replaceChildren(icon('refresh'), msg); t.hidden = false;
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => { t.hidden = true; }, 5000);
 }
+
+// Reload when the daily job seeds a new review (current.db repointed or reseeded)
+// or the log job records results. Edits alone do not change the version.
+async function poll() {
+  if (document.hidden) return;
+  try {
+    const { version } = await api('GET', '/api/version');
+    if (!S || version === S.version) return;
+    const fresh = !S.version || version.split('|').slice(0, 2).join('|') !== S.version.split('|').slice(0, 2).join('|');
+    S = await api('GET', '/api/review');
+    if (fresh) { open.clear(); wasLogged = null; toast('New suggestions loaded'); }
+    render();
+  } catch { /* server restarting; try again next tick */ }
+}
+setInterval(poll, 10000);
+document.addEventListener('visibilitychange', poll);
 
 $('#evall').onclick = (ev) => {
   allOpen = !allOpen; if (!allOpen) open.clear();
@@ -460,7 +516,7 @@ $('#evall').onclick = (ev) => {
   render();
 };
 $('#approveAll').onclick = async () => { await api('POST', '/api/approve-remaining'); await load(); };
-$('#submit').onclick = async () => { const j = await api('POST', '/api/submit'); S.submittedAt = j.submittedAt; renderChrome(); if (j.loggingStarted) pollWhileLogging(); };
+$('#submit').onclick = async () => { const j = await api('POST', '/api/submit'); S.submittedAt = j.submittedAt; renderChrome(); };
 load().catch((e) => { document.body.textContent = 'Failed to load: ' + e.message; });
 </script>
 </body>
