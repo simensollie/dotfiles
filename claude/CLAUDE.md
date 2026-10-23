@@ -9,6 +9,7 @@
 
 - Prefer subagents for exploration, verification, and large read/research tasks. Fan out (several in parallel) when scanning many files, reviewing skills/PRs, or cross-checking a guide or claim against a codebase.
 - Verify before asserting. Check the code (or official docs, e.g. via context7) before claiming how something behaves or filing an issue. Never assume a feature does or doesn't exist, and don't create a tracker issue for something until you've confirmed it isn't already implemented.
+- Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to the user and get their buy-in. Do not silently expand scope for theoretical robustness.
 
 ## Issue tracking
 
