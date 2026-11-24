@@ -13,7 +13,7 @@ Personal configuration files for macOS and Linux.
 | `herdr/` | [Herdr](https://herdr.dev/) terminal workspace manager for AI coding agents |
 | `jankyborders/` | [JankyBorders](https://github.com/FelixKratz/JankyBorders) window border highlights for macOS |
 | `nvim/` | Neovim plugin additions on top of the `omarchy-nvim` package |
-| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver and wallpaper, Alacritty, bash, XCompose and the Omnissa Horizon launcher with its clipboard bridge for Linux |
+| `omarchy/` | [Hyprland](https://hyprland.org/) keybindings, input, and monitor config, plus [Omarchy](https://omarchy.org/) shell (bar layout and idle timers), the Solfuglen screensaver and wallpaper, Alacritty, bash, XCompose, the WirePlumber Bluetooth headset fixes and the Omnissa Horizon launcher with its clipboard bridge for Linux |
 | `starship/` | [Starship](https://starship.rs/) cross-shell prompt config |
 | `zsh/` | Zsh aliases and helpers (eza, fzf, zoxide-backed `cd`), ported from Omarchy |
 
@@ -192,6 +192,47 @@ shared temp db, so the loser dies with `Cannot fetch updates`,
 icon. Monitor 0 is created first and wins every time, which is why it was always the
 same screen. The wrapper just puts a `flock` around the real binary; it falls through
 to an unserialized run on timeout, so it is never worse than not having it.
+
+### Bluetooth headset call microphone (Linux)
+
+A Jabra EVOLVE 65 on the on-board Intel controller: after one call, the next
+call can start with a dead microphone, because the old call link (SCO) is
+still held and the new one is refused with `Too many links`. Resetting only
+the hands-free profile clears it in about 1 s while A2DP keeps playing.
+
+```bash
+mkdir -p ~/.local/share/wireplumber/scripts/device ~/.config/wireplumber/wireplumber.conf.d
+ln -sfn "$D/omarchy/wireplumber/scripts/device/autoswitch-bluetooth-profile.lua" \
+        ~/.local/share/wireplumber/scripts/device/autoswitch-bluetooth-profile.lua
+for f in log-level-notice bluetooth-hfp-cvsd; do
+  ln -sfn "$D/omarchy/wireplumber/wireplumber.conf.d/$f.conf" ~/.config/wireplumber/wireplumber.conf.d/$f.conf
+done
+ln -sfn "$D/omarchy/bin/headset-sco-recover" ~/.local/bin/headset-sco-recover
+cp omarchy/systemd/user/headset-sco-recover.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user restart wireplumber   # drops and reconnects the headset
+systemctl --user enable --now headset-sco-recover.service
+```
+
+- `autoswitch-bluetooth-profile.lua` is a copy of the stock WirePlumber 0.5.18
+  script with local blocks: a 10 s settle delay before a freshly connected
+  headset is switched to its headset profile, and two journal markers
+  (`headset-hfp-left`, `headset-sco-dead`). It must live under
+  `~/.local/share`, WirePlumber does not look for scripts in `~/.config`. After
+  a WirePlumber upgrade, diff it against
+  `/usr/share/wireplumber/scripts/device/` and re-apply the local blocks.
+- `log-level-notice.conf` makes the markers reach the journal. Without it
+  nothing below fires.
+- `headset-sco-recover` follows the journal for the markers (WirePlumber's Lua
+  sandbox cannot run a command). After each hangup it resets the hands-free
+  link so the next call starts clean; if a call still starts dead it resets at
+  once and puts the card back in call mode.
+- `bluetooth-hfp-cvsd.conf` turns mSBC off (8 kHz voice, but a call link that
+  stays up).
+
+Check with `journalctl --user -u headset-sco-recover --since today`: one
+`reset HFP after call` line per hangup; `call mode started dead` means the
+repair ran.
 
 ### Omnissa Horizon (Linux)
 

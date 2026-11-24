@@ -1,0 +1,19 @@
+# Resets a Bluetooth headset's hands-free link after each call and on a dead start
+# (stale SCO link, EMLINK). The why is in ~/.local/bin/headset-sco-recover.
+# Follows the WirePlumber journal for the marker the local autoswitch override
+# logs; does nothing otherwise.
+
+[Unit]
+Description=Reset the headset hands-free link after calls and when a call starts dead
+PartOf=graphical-session.target
+After=graphical-session.target wireplumber.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/headset-sco-recover
+Restart=on-failure
+RestartSec=5
+Environment=XDG_RUNTIME_DIR=%t
+
+[Install]
+WantedBy=graphical-session.target
